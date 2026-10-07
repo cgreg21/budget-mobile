@@ -1,0 +1,74 @@
+<GridLayout rows="auto, *" class="page">
+  <ns-header row="0" [title]="s.t().settings.title"></ns-header>
+  <ScrollView row="1">
+    <StackLayout class="form">
+      <Label [text]="s.t().settings.general" class="section-title"></Label>
+      <GridLayout columns="*, auto" class="setting" (tap)="pickLanguage()">
+        <Label col="0" [text]="s.t().settings.language"></Label>
+        <Label col="1" [text]="languageName(s.settings().language)" class="setting-value"></Label>
+      </GridLayout>
+      <GridLayout columns="*, auto" class="setting" (tap)="pickCurrency()">
+        <Label col="0" [text]="s.t().settings.currency"></Label>
+        <Label col="1" [text]="s.settings().currency" class="setting-value"></Label>
+      </GridLayout>
+      <GridLayout columns="*, auto" class="setting" (tap)="pickDateFormat()">
+        <Label col="0" [text]="s.t().settings.dateFormat"></Label>
+        <Label col="1" [text]="dateFormatName(s.settings().dateFormat)" class="setting-value"></Label>
+      </GridLayout>
+      <GridLayout columns="*, auto" class="setting" (tap)="pickAmountFormat()">
+        <Label col="0" [text]="s.t().settings.amountFormat"></Label>
+        <Label col="1" [text]="amountFormatName(s.settings().amountFormat)" class="setting-value"></Label>
+      </GridLayout>
+      <GridLayout columns="*, auto" class="setting" (tap)="pickTheme()">
+        <Label col="0" [text]="s.t().settings.theme"></Label>
+        <Label col="1" [text]="themeName(s.settings().theme)" class="setting-value"></Label>
+      </GridLayout>
+
+      <Label [text]="s.t().settings.manage" class="section-title"></Label>
+      <GridLayout columns="*, auto" class="setting" (tap)="openRecurrences()">
+        <Label col="0" [text]="s.t().settings.recurrences"></Label>
+        <Label col="1" text="&#x203A;" class="setting-value"></Label>
+      </GridLayout>
+
+      <Label [text]="s.t().sync.title" class="section-title"></Label>
+      <Label [text]="syncProvider() === 'icloud' ? s.t().sync.icloudHelp : s.t().sync.help" textWrap="true" class="row-sub"></Label>
+      @if (icloudSupported) {
+        <GridLayout columns="*, auto" class="setting" (tap)="pickProvider()">
+          <Label col="0" [text]="s.t().sync.provider"></Label>
+          <Label col="1" [text]="providerName(syncProvider())" class="setting-value"></Label>
+        </GridLayout>
+      }
+      <GridLayout columns="*, auto" rows="auto" class="setting">
+        <Label col="0" [text]="s.t().sync.enable"></Label>
+        <Switch col="1" [checked]="syncEnabled()" (checkedChange)="syncEnabled.set($any($event).value)"></Switch>
+      </GridLayout>
+      @if (syncProvider() === 'webdav') {
+        <Label [text]="s.t().sync.server" class="field-label"></Label>
+        <TextField [text]="syncUrl()" hint="https://xxxxx.connect.kdrive.infomaniak.com" keyboardType="url" autocorrect="false" autocapitalizationType="none" class="input" (textChange)="syncUrl.set($any($event).value)"></TextField>
+        <Label [text]="s.t().sync.username" class="field-label"></Label>
+        <TextField [text]="syncUser()" keyboardType="email" autocorrect="false" autocapitalizationType="none" class="input" (textChange)="syncUser.set($any($event).value)"></TextField>
+        <Label [text]="s.t().sync.password" class="field-label"></Label>
+        <TextField [text]="syncPassword()" [hint]="sync.hasPassword() ? s.t().sync.passwordKept : ''" secure="true" autocorrect="false" autocapitalizationType="none" class="input" (textChange)="syncPassword.set($any($event).value)"></TextField>
+      }
+      <Label [text]="s.t().sync.remoteDir" class="field-label"></Label>
+      <TextField [text]="syncDir()" autocorrect="false" autocapitalizationType="none" class="input" (textChange)="syncDir.set($any($event).value)"></TextField>
+      <Label [text]="syncStatusText()" textWrap="true" [class]="'sync-status sync-' + sync.status().state"></Label>
+      <Label [text]="sync.status().message ?? ''" textWrap="true" class="error" [visibility]="sync.status().message ? 'visible' : 'collapse'"></Label>
+      <Label [text]="s.t().sync.offlineNote" textWrap="true" class="row-sub" [visibility]="sync.status().state === 'offline' ? 'visible' : 'collapse'"></Label>
+      <Label [text]="s.t().sync.passwordSession" textWrap="true" class="row-sub" [visibility]="passwordPersistent || syncProvider() === 'icloud' ? 'collapse' : 'visible'"></Label>
+      <Button [text]="s.t().sync.save" class="primary" (tap)="saveSync()"></Button>
+      <Button [text]="s.t().sync.syncNow" class="secondary" [isEnabled]="sync.active()" (tap)="sync.syncNow()"></Button>
+
+      <Label [text]="s.t().settings.thresholds" class="section-title"></Label>
+      <Label [text]="s.t().settings.thresholdsHelp" textWrap="true" class="row-sub"></Label>
+      <Label [text]="s.t().settings.low" class="field-label"></Label>
+      <TextField [text]="low()" keyboardType="decimal" class="input" (textChange)="low.set($any($event).value)"></TextField>
+      <Label [text]="s.t().settings.medium" class="field-label"></Label>
+      <TextField [text]="medium()" keyboardType="decimal" class="input" (textChange)="medium.set($any($event).value)"></TextField>
+      <Label [text]="s.t().settings.high" class="field-label"></Label>
+      <TextField [text]="high()" keyboardType="decimal" class="input" (textChange)="high.set($any($event).value)"></TextField>
+      <Label [text]="message()" textWrap="true" class="error" [visibility]="message() ? 'visible' : 'collapse'"></Label>
+      <Button [text]="s.t().common.save" class="primary" (tap)="saveThresholds()"></Button>
+    </StackLayout>
+  </ScrollView>
+</GridLayout>

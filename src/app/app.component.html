@@ -1,0 +1,27 @@
+<RadSideDrawer [drawerTransition]="transition" [drawerContentSize]="drawerWidth">
+  <GridLayout tkDrawerContent rows="auto, *" class="drawer">
+    <Label row="0" [text]="s.t().appName" class="drawer-title"></Label>
+
+    <ScrollView row="1">
+      <StackLayout>
+        @for (item of items(); track item.url) {
+          <GridLayout columns="auto, *" rows="auto" [class]="item.url === url() ? 'drawer-item drawer-item-active' : 'drawer-item'" (tap)="go(item.url)">
+            <Label col="0" [text]="item.icon" class="mdi drawer-icon"></Label>
+            <Label col="1" [text]="item.label" class="drawer-label"></Label>
+          </GridLayout>
+        }
+
+        @if (sync.active()) {
+          <GridLayout columns="auto, *" rows="auto" class="drawer-item drawer-sync" (tap)="onSyncTap()">
+            <Label col="0" [text]="syncIcon()" [class]="'mdi drawer-icon sync-' + sync.status().state"></Label>
+            <Label col="1" [text]="syncText()" textWrap="true" class="drawer-label"></Label>
+          </GridLayout>
+        }
+      </StackLayout>
+    </ScrollView>
+  </GridLayout>
+
+  <GridLayout tkMainContent>
+    <page-router-outlet></page-router-outlet>
+  </GridLayout>
+</RadSideDrawer>

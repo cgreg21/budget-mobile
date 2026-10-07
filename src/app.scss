@@ -1,0 +1,212 @@
+@use "styles/variables" as *;
+
+// ---- base ----
+.page { background-color: $bg; color: $text; font-family: $font-regular; }
+ActionBar { background-color: $surface; color: $text; font-family: $font-bold; }
+
+Label { color: $text; font-family: $font-regular; }
+Button { font-family: $font-bold; text-transform: none; }
+TextField, TextView { font-family: $font-regular; }
+.mdi { font-family: $font-icons; }
+
+// ---- header ----
+.app-bar { background-color: $bg; padding: 8 12; }
+.bar-icon { font-size: 22; width: 44; height: 44; text-align: center; vertical-align: middle; border-radius: 22; background-color: $card; color: $text; }
+.bar-title { font-size: 22; font-family: $font-bold; color: $text; vertical-align: middle; margin-left: 12; }
+.bar-icon-active { background-color: $green; color: $bg; }
+
+// ---- month bar, summary ----
+.month-bar { padding: 2 12; }
+.month-label { font-size: 18; font-family: $font-bold; text-align: center; vertical-align: middle; }
+.nav-btn { background-color: transparent; font-size: 24; color: $green; width: 48; height: $field-height; }
+
+// The cards have their own 4 margin: 8 + 4 puts their edges at 12, like the rows of the lists.
+.summary { margin: 4 8; }
+.card { background-color: $card; border-width: 1; border-color: $border; border-radius: $radius-lg; padding: 12 14; margin: 4; }
+.card-title { font-size: 12; color: $muted; }
+.balance-value { font-size: 30; font-family: $font-bold; text-align: right; }
+.amount { font-size: 18; font-family: $font-bold; text-align: right; }
+
+.level-critical { background-color: rgba($red, 0.12); border-color: rgba($red, 0.35); .balance-value { color: $red; } }
+.level-low { background-color: rgba($yellow, 0.12); border-color: rgba($yellow, 0.35); .balance-value { color: $yellow; } }
+.level-medium { background-color: rgba($blue, 0.12); border-color: rgba($blue, 0.35); .balance-value { color: $blue; } }
+.level-high { background-color: rgba($green, 0.12); border-color: rgba($green, 0.35); .balance-value { color: $green; } }
+.stat-income { background-color: rgba($green, 0.08); }
+.stat-expense { background-color: rgba($red, 0.08); }
+
+.income { color: $green; }
+.expense { color: $red; }
+
+// ---- inputs, buttons, chips ----
+.filters { margin: 4 12; }
+.search, .input { background-color: $surface; border-width: 1; border-color: $border; border-radius: $radius-md; padding: 0 14; height: $field-height; margin: 4 0; color: $text; placeholder-color: $muted; }
+.icon-input { width: 64; text-align: center; margin-right: 6; }
+.chip { background-color: $card; color: $muted; border-width: 1; border-color: $border; border-radius: $field-height * 0.5; font-size: 14; margin: 2; padding: 0 12; height: $field-height; }
+.month-grid { margin: 8 0; }
+.month-grid .chip { margin: 6; }
+.chip-active { background-color: $green; color: $bg; border-color: $green; }
+.chip-editing { background-color: rgba($yellow, 0.2); color: $yellow; border-color: $yellow; }
+.chip-data { background-color: rgba($blue, 0.18); color: $blue; border-color: rgba($blue, 0.5); }
+.primary { background-color: $green; color: $bg; border-radius: $radius-md; margin-top: 12; padding: 0 16; height: $field-height; font-size: 16; }
+.secondary { background-color: rgba($green, 0.12); color: $green; border-width: 1; border-color: rgba($green, 0.3); border-radius: $radius-md; margin-top: 12; padding: 0 16; height: $field-height; font-size: 16; }
+.danger { background-color: $red; color: $bg; border-radius: $radius-md; margin-top: 16; padding: 0 16; height: $field-height; font-size: 16; }
+.compact { margin: 4 0 4 6; padding: 0 16; }
+.icon-btn { background-color: transparent; font-size: 22; height: $field-height; }
+.icon-pick { background-color: $surface; border-width: 1; border-color: $border; color: $text; font-size: 24; border-radius: $radius-md; margin: 4 6 4 0; padding: 0 10; height: $field-height; width: 52; }
+.icon-choice { font-size: 28; width: 56; height: 56; text-align: center; vertical-align: middle; border-radius: $radius-lg; margin: 2; }
+.icon-choice-selected { background-color: $green; color: $bg; }
+.select { background-color: $surface; border-width: 1; border-color: $border; color: $text; border-radius: $radius-md; text-align: left; padding: 0 14; height: $field-height; margin: 4 0; font-family: $font-regular; }
+.select-icon { font-size: 22; margin-right: 10; vertical-align: middle; }
+.date-picker { margin: 4 0; }
+.backdrop { background-color: #99000000; }
+.popover { margin: 8 12; padding: 14; box-shadow: 0 8 20 0 rgba(0, 0, 0, 0.5); }
+
+// ---- modal (filters) ----
+.modal { background-color: $surface; padding: 12 16 24 16; border-top-left-radius: 24; border-top-right-radius: 24; }
+.sheet-handle { width: 40; height: 4; border-radius: 2; background-color: $border; margin-bottom: 12; }
+.modal-title { font-size: 20; font-family: $font-bold; margin-bottom: 8; }
+.modal-list { margin: 4 0; }
+.apply { margin-left: 8; }
+.pick-row { padding: 8 10; margin: 2 0; border-radius: $radius-md; }
+.pick-row-selected { background-color: rgba($green, 0.12); }
+.pick-icon { font-size: 20; width: 32; vertical-align: middle; color: $muted; }
+.pick-name { font-size: 15; }
+.pick-check { font-size: 22; color: $muted; }
+.pick-row-selected .pick-icon, .pick-row-selected .pick-check { color: $green; }
+
+// ---- drawer ----
+.drawer { background-color: $surface; padding-bottom: 12; }
+.drawer-title { font-size: 24; font-family: $font-bold; padding: 24 20 16 20; }
+.drawer-item { padding: 12 14; margin: 2 10; border-radius: $radius-md; }
+.drawer-item-active { background-color: rgba($green, 0.12); }
+.drawer-icon { font-size: 22; margin-right: 14; vertical-align: middle; color: $muted; }
+.drawer-label { font-size: 16; font-family: $font-medium; vertical-align: middle; }
+.drawer-item-active .drawer-icon, .drawer-item-active .drawer-label { color: $green; }
+.drawer-sync { margin-top: 12; border-top-width: 1; border-top-color: $border; border-radius: 0; }
+.sync-status { margin-top: 8; font-size: 13; color: $muted; }
+.sync-offline { color: $yellow; }
+.sync-error { color: $red; }
+.sync-online { color: $green; }
+
+// ---- tabs ----
+.tab-bar { background-color: $surface; border-top-width: 1; border-top-color: $border; height: 72; }
+.tabs-page { background-image: linear-gradient(to bottom, $bg 50%, $surface 50%); }
+.tab { padding: 4 0; border-top-width: 3; border-top-color: transparent; }
+.tab-icon-wrap { padding: 0 14; }
+.tab-icon { font-size: 32; color: $muted; text-align: center; }
+.tab-label { font-size: 14; font-family: $font-bold; color: $muted; }
+.tab-badge { font-size: 11; font-family: $font-bold; color: $muted; background-color: $card; border-width: 1; border-color: $border; border-radius: 9; padding: 0 5; margin-top: -4; margin-right: -4; min-width: 18; height: 18; text-align: center; vertical-align: middle; }
+.tab-active { border-top-color: $green; }
+.tab-active .tab-icon, .tab-active .tab-label { color: $green; }
+.tab-active .tab-badge { color: $bg; background-color: $green; border-color: $green; }
+
+// ---- lists ----
+.list { background-color: transparent; }
+.list-content { padding-bottom: 88; }
+.row-wrap { background-color: transparent; }
+.swipe-delete { width: 88; margin: 3 12 3 0; background-color: $red; color: $bg; border-radius: $radius-lg; font-size: 14; }
+.row { padding: 10 14; margin: 3 12; background-color: $card; border-width: 1; border-color: $border; border-radius: $radius-lg; }
+.row-icon { font-size: 22; width: 44; height: 44; text-align: center; vertical-align: middle; border-radius: 14; background-color: rgba($green, 0.1); color: $green; margin-right: 12; }
+.row-title { font-size: 16; font-family: $font-medium; }
+.row-sub { font-size: 12; color: $muted; }
+.row-amount { font-size: 16; font-family: $font-bold; }
+
+// The button is centred on the top edge of the tab bar (height 72): bottom margin = 72 - fab radius.
+.fab { width: 80; height: 80; border-radius: 40; border-width: 5; border-color: $bg; font-size: 38; background-color: $green; color: $bg; margin: 0 0 32 0; }
+
+.empty { padding: 24; }
+.empty-title { font-size: 18; font-family: $font-bold; text-align: center; }
+.empty-text { font-size: 14; color: $muted; text-align: center; padding: 12; }
+
+// ---- forms, settings ----
+.form { padding: 12 16; }
+// The add form stays at the top; only the list of categories under it scrolls.
+.category-form { padding-bottom: 6; }
+.category-list { padding-top: 0; }
+.field-label { font-size: 12; color: $muted; margin-top: 14; text-transform: uppercase; }
+.section-title { font-size: 13; font-family: $font-bold; color: $muted; margin-top: 20; text-transform: uppercase; }
+.kind-toggle { margin-bottom: 4; }
+.switch-row { margin-top: 12; }
+.switch-label { font-size: 16; vertical-align: middle; }
+.error { color: $red; margin-top: 8; }
+.setting { background-color: $card; border-width: 1; border-color: $border; border-radius: $radius-md; padding: 12 14; margin: 3 0; }
+.setting-wrap { background-color: transparent; padding: 3 0; }
+.setting-wrap .setting { margin: 0; }
+.setting-value { color: $green; }
+
+// ---- statistics ----
+.bar-row { margin: 6 0; }
+.bar-track { background-color: $border; border-radius: 4; height: 8; }
+.bar { height: 8; border-radius: 4; }
+.income-bar { background-color: $green; }
+.expense-bar { background-color: $red; }
+
+.pie { margin: 12 0; }
+.stat-list { padding-bottom: 12; }
+.row-bar { margin: 10 0 2 0; }
+.legend-fill { height: 8; border-radius: 4; }
+.range-row { margin: 0 12; }
+.range-row .select { margin: 4 4; }
+.select-caption { margin-right: 8; }
+.bars { margin: 4 12; }
+
+// ---- light theme: surfaces and text only ----
+// `.ns-light Label` outweighs a plain class, so every coloured label is restated here.
+.ns-light {
+  .page { background-color: $light-bg; color: $light-text; }
+  ActionBar { background-color: $light-surface; color: $light-text; }
+  Label { color: $light-text; }
+
+  .app-bar { background-color: $light-bg; }
+  .bar-icon { background-color: $light-surface; color: $light-text; }
+  .bar-title { color: $light-text; }
+  .bar-icon-active { background-color: $green; color: $light-text; }
+  .nav-btn { color: $light-green; }
+
+  .card, .row, .setting, .chip, .tab-badge { background-color: $light-surface; border-color: $light-border; }
+  .level-critical { background-color: #ffe3e3; border-color: #ffb3b3; .balance-value { color: $light-red; } }
+  .level-low { background-color: #fff4d1; border-color: #f2d98a; .balance-value { color: $light-amber; } }
+  .level-medium { background-color: #e1ecff; border-color: #b4cdfa; .balance-value { color: $light-blue; } }
+  .level-high { background-color: $light-green-tint; border-color: $light-green-border; .balance-value { color: $light-green; } }
+  .stat-income { background-color: #e8fbf3; }
+  .stat-expense { background-color: #fff0f0; }
+  .card-title, .row-sub, .field-label, .section-title, .empty-text, .sync-status { color: $light-muted; }
+
+  .search, .input, .select, .icon-pick { background-color: $light-surface; border-color: $light-border; color: $light-text; }
+  .chip { color: $light-muted; }
+  .chip-active { background-color: $green; color: $light-text; border-color: $green; }
+  .chip-editing { background-color: rgba($light-amber, 0.15); color: $light-amber; border-color: $light-amber; }
+  .chip-data { background-color: rgba($light-blue, 0.12); color: $light-blue; border-color: rgba($light-blue, 0.45); }
+  .popover { box-shadow: 0 8 20 0 rgba(0, 0, 0, 0.18); }
+  .primary, .danger, .swipe-delete { color: $light-text; }
+  .fab { color: $light-text; border-color: $light-bg; }
+  .secondary { color: $light-green; background-color: $light-green-tint; border-color: $light-green-border; }
+  .setting-value { color: $light-green; }
+  .icon-choice-selected { background-color: $green; color: $light-text; }
+
+  .modal, .drawer, .tab-bar { background-color: $light-surface; border-top-color: $light-border; }
+  .tabs-page { background-image: linear-gradient(to bottom, $light-bg 50%, $light-surface 50%); }
+  .sheet-handle { background-color: $light-border; }
+  .drawer-icon { color: $light-muted; }
+  .drawer-item-active { background-color: $light-green-tint; }
+  .drawer-item-active .drawer-icon, .drawer-item-active .drawer-label { color: $light-green; }
+  .drawer-sync { border-top-color: $light-border; }
+
+  .tab-icon, .tab-label { color: $light-muted; }
+  .tab-active .tab-icon, .tab-active .tab-label { color: $light-green; }
+  .tab-active .tab-badge { color: $light-text; background-color: $green; }
+
+  .pick-icon, .pick-check { color: $light-muted; }
+  .pick-row-selected { background-color: $light-green-tint; }
+  .pick-row-selected .pick-icon, .pick-row-selected .pick-check { color: $light-green; }
+
+  .bar-track { background-color: $light-border; }
+  .income { color: $light-green; }
+  .income-bar { background-color: $light-green-bar; }
+  .expense { color: $light-red; }
+  .expense-bar { background-color: $light-red; }
+  .sync-offline { color: $light-amber; }
+  .sync-error, .error { color: $light-red; }
+  .sync-online { color: $light-green; }
+  .row-icon { color: $light-green; background-color: $light-green-tint; }
+}

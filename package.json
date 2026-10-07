@@ -1,0 +1,41 @@
+{
+  "name": "budget-mobile",
+  "main": "src/main.ts",
+  "version": "1.0.0",
+  "description": "Budget App - personal budget manager for mobile (NativeScript + Angular), ported from the node-gtk desktop app",
+  "license": "Apache-2.0",
+  "private": true,
+  "scripts": {
+    "android": "ns run android",
+    "ios": "ns run ios",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@angular/animations": "~22.0.0",
+    "@angular/common": "~22.0.0",
+    "@angular/compiler": "~22.0.0",
+    "@angular/core": "~22.0.0",
+    "@angular/forms": "~22.0.0",
+    "@angular/platform-browser": "~22.0.0",
+    "@angular/platform-browser-dynamic": "~22.0.0",
+    "@angular/router": "~22.0.0",
+    "@nativescript-community/sqlite": "^3.5.9",
+    "@nativescript-community/ui-chart": "^2.0.30",
+    "@nativescript/angular": "~22.0.0",
+    "@nativescript/core": "~9.1.0",
+    "@nativescript/secure-storage": "^4.0.2",
+    "nativescript-ui-sidedrawer": "~15.2.0",
+    "rxjs": "~7.8.0",
+    "zone.js": "~0.16.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "~22.0.0",
+    "@angular/compiler-cli": "~22.0.0",
+    "@nativescript/preview-cli": "1.0.15",
+    "@nativescript/types": "~9.0.0",
+    "@nativescript/webpack": "~5.0.25",
+    "@ngtools/webpack": "~22.0.0",
+    "sass": "^1.105.1",
+    "typescript": "~6.0.0"
+  }
+}

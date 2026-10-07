@@ -1,0 +1,46 @@
+<GridLayout rows="auto, auto, *" class="page">
+  <ns-header row="0" [title]="s.t().categories.title"></ns-header>
+
+  <StackLayout row="1" class="form category-form">
+    <GridLayout columns="auto, *, auto">
+      <Button col="0" [text]="glyphOf(newIcon())" class="mdi icon-pick" (tap)="pickerTarget.set(NEW)"></Button>
+      <TextField col="1" [text]="newName()" [hint]="s.t().categories.newName" class="input"
+                 (textChange)="newName.set($any($event).value)"></TextField>
+      <Button col="2" [text]="s.t().common.add" class="primary compact" (tap)="add()"></Button>
+    </GridLayout>
+    <Label [text]="error()" textWrap="true" class="error" [visibility]="error() ? 'visible' : 'collapse'"></Label>
+  </StackLayout>
+
+  <ScrollView row="2">
+    <StackLayout class="form category-list">
+      @for (category of b.categories(); track category.name) {
+        <GridLayout class="setting-wrap">
+          <GridLayout columns="auto, *, auto" class="setting">
+            <Label col="0" [text]="glyphOf(category.icon)" class="mdi row-icon" (tap)="pickerTarget.set(category.name)"></Label>
+            <Label col="1" [text]="category.name" verticalAlignment="middle" (tap)="rename(category)"></Label>
+            <Button col="2" [text]="ui.remove" class="mdi icon-btn" (tap)="remove(category)"></Button>
+          </GridLayout>
+        </GridLayout>
+      }
+      <GridLayout height="24"></GridLayout>
+    </StackLayout>
+  </ScrollView>
+
+  @if (pickerTarget() !== null) {
+    <GridLayout row="1" rowSpan="2">
+      <GridLayout class="backdrop" (tap)="pickerTarget.set(null)"></GridLayout>
+      <StackLayout class="card popover" verticalAlignment="top" height="auto">
+        <Label [text]="s.t().categories.pickIcon" class="section-title"></Label>
+        <ScrollView height="320">
+          <WrapLayout>
+            @for (choice of choices; track choice.name) {
+              <Label [text]="glyphOf(choice.name)" [class]="'mdi icon-choice' + (choice.name === currentIcon() ? ' icon-choice-selected' : '')"
+                     (tap)="pickIcon(choice.name)"></Label>
+            }
+          </WrapLayout>
+        </ScrollView>
+      </StackLayout>
+    </GridLayout>
+  }
+
+</GridLayout>

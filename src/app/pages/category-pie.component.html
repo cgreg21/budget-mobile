@@ -1,0 +1,27 @@
+<GridLayout rows="auto, auto, *" class="pie-section">
+  <Label row="0" [text]="title()" class="field-label"></Label>
+  @if (slices().length > 0) {
+    <PieChart row="1" class="pie" height="220" (loaded)="onLoaded($any($event).object)"></PieChart>
+    <ScrollView row="2" class="legend">
+      <StackLayout class="stat-list">
+        @for (item of legend(); track item.label) {
+          <StackLayout class="row">
+            <GridLayout columns="56, *, auto" rows="auto">
+              <Label col="0" [text]="item.icon" class="mdi row-icon" [style.color]="item.color"></Label>
+              <StackLayout col="1" verticalAlignment="middle">
+                <Label [text]="item.label" class="row-title" textWrap="false"></Label>
+                <Label [text]="item.percent" class="row-sub"></Label>
+              </StackLayout>
+              <Label col="2" [text]="item.amount" [class]="'row-amount ' + kind()" verticalAlignment="middle"></Label>
+            </GridLayout>
+            <GridLayout [columns]="item.columns" class="bar-track row-bar">
+              <StackLayout col="0" class="legend-fill" [style.background-color]="item.color"></StackLayout>
+            </GridLayout>
+          </StackLayout>
+        }
+      </StackLayout>
+    </ScrollView>
+  } @else {
+    <Label row="1" [text]="s.t().stats.noData" class="empty-text"></Label>
+  }
+</GridLayout>

@@ -1,0 +1,24 @@
+<GridLayout rows="auto, *" class="page">
+  <ns-header row="0" [title]="s.t().stats.title"></ns-header>
+  <GridLayout row="1" rows="auto, *, auto">
+    <ns-month-bar row="0" [month]="month()" (monthChange)="month.set($event)" (labelTap)="chooseMonth()"></ns-month-bar>
+
+    <GridLayout row="1">
+      <GridLayout (loaded)="pager.register(0, $any($event).object)">
+        <ns-category-pie class="form" [title]="s.t().stats.expensesByCategory" [slices]="expenseSlices()" kind="expense"></ns-category-pie>
+      </GridLayout>
+      <GridLayout (loaded)="pager.register(1, $any($event).object)">
+        <ns-category-pie class="form" [title]="s.t().stats.recurringExpensesByCategory" [slices]="recurringSlices()" kind="expense"></ns-category-pie>
+      </GridLayout>
+    </GridLayout>
+
+    <GridLayout row="2" columns="*, *" class="tab-bar">
+      <GridLayout col="0" [class]="tabClass('all')" (tap)="selectTab('all')">
+        <Label [text]="ui.transactions" class="mdi tab-icon" horizontalAlignment="center" verticalAlignment="middle"></Label>
+      </GridLayout>
+      <GridLayout col="1" [class]="tabClass('recurring')" (tap)="selectTab('recurring')">
+        <Label [text]="ui.repeat" class="mdi tab-icon" horizontalAlignment="center" verticalAlignment="middle"></Label>
+      </GridLayout>
+    </GridLayout>
+  </GridLayout>
+</GridLayout>

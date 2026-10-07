@@ -1,0 +1,42 @@
+// Design system (Student Financial Planner style guide).
+// Dark palette is the base; the light theme only overrides surfaces and text.
+
+// Brand
+$green: #00e5a0;
+$blue: #4f8ef7;
+$yellow: #f7c948;
+$red: #ff6b6b;
+
+// Dark surfaces and text
+$bg: #0a0f1e;
+$surface: #111827;
+$card: #1a2235;
+$border: #1e2d45;
+$text: #f0f4ff;
+$muted: #7a8ba6;
+
+// Light theme
+$light-bg: #f4f6fb;
+$light-surface: #ffffff;
+$light-border: #dde3ee;
+$light-muted: #5b6b85;
+$light-text: $bg;
+$light-green: #00805c;
+$light-green-bar: #00c98d;
+$light-green-tint: #d9faee;
+$light-green-border: #8fe9c8;
+$light-red: #d93f3f;
+$light-amber: #b7791f;
+$light-blue: #2f6de0;
+
+// Fonts: DM Sans is loaded by PostScript name (src/fonts), so the weight is chosen with the family.
+$font-regular: DMSans-Regular;
+$font-medium: DMSans-Medium;
+$font-bold: DMSans-Bold;
+$font-icons: "Material Design Icons";
+
+// Radii
+$radius-sm: 8;
+$radius-md: 12;
+$field-height: 48;
+$radius-lg: 16;
