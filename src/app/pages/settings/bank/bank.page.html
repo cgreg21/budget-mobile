@@ -1,0 +1,45 @@
+<GridLayout rows="auto, *" class="page">
+  <ActionBar row="0" [title]="s.t().bank.title">
+    <NavigationButton [text]="s.t().common.back" android.systemIcon="ic_menu_back" (tap)="router.back()"></NavigationButton>
+  </ActionBar>
+  <ScrollView row="1">
+    <StackLayout class="form">
+      <Label [text]="s.t().bank.help" textWrap="true" class="row-sub"></Label>
+
+      <Label [text]="status()" textWrap="true" [class]="'sync-status ' + (bank.connected() && !bank.expired() ? 'sync-online' : 'sync-offline')"></Label>
+      <Label [text]="validity()" textWrap="true" class="row-sub" [visibility]="validity() ? 'visible' : 'collapse'"></Label>
+      <Label [text]="lastImport()" textWrap="true" class="row-sub" [visibility]="bank.connected() ? 'visible' : 'collapse'"></Label>
+      <Label [text]="bank.notice()?.text ?? ''" textWrap="true" [class]="bank.notice()?.tone === 'error' ? 'error' : 'row-sub'" [visibility]="bank.notice() ? 'visible' : 'collapse'"></Label>
+      <ActivityIndicator busy="true" [visibility]="bank.busy() ? 'visible' : 'collapse'" width="28" height="28"></ActivityIndicator>
+
+      @if (bank.connected()) {
+        <Button [text]="s.t().bank.importNow" class="primary" [isEnabled]="!bank.busy()" (tap)="bank.importNow()"></Button>
+        <Label [text]="s.t().bank.renewNote" textWrap="true" class="row-sub"></Label>
+        <Button [text]="s.t().bank.disconnect" class="secondary" (tap)="disconnect()"></Button>
+      }
+
+      <Label [text]="s.t().bank.applicationId" class="field-label"></Label>
+      <TextField [text]="applicationId()" autocorrect="false" autocapitalizationType="none" class="input" (textChange)="applicationId.set($any($event).value)"></TextField>
+      <Label [text]="s.t().bank.privateKey" class="field-label"></Label>
+      <TextView [text]="privateKey()" [hint]="bank.hasKey() ? s.t().bank.privateKeyKept : '-----BEGIN PRIVATE KEY-----'" autocorrect="false" autocapitalizationType="none" class="input multiline" (textChange)="privateKey.set($any($event).value)"></TextView>
+      <Label [text]="s.t().bank.keyWarning" textWrap="true" class="row-sub"></Label>
+      <Button [text]="s.t().bank.saveCredentials" class="secondary" (tap)="saveCredentials()"></Button>
+
+      <Label [text]="s.t().bank.bank" class="field-label"></Label>
+      <TextField [text]="query()" autocorrect="false" class="input" (textChange)="query.set($any($event).value)"></TextField>
+      <Label [text]="s.t().bank.redirectUrl" class="field-label"></Label>
+      <TextField [text]="redirectUrl()" keyboardType="url" autocorrect="false" autocapitalizationType="none" class="input" (textChange)="redirectUrl.set($any($event).value)"></TextField>
+      <Label [text]="s.t().bank.redirectHelp" textWrap="true" class="row-sub"></Label>
+      <Label [text]="s.t().bank.importFrom" class="field-label"></Label>
+      <TextField [text]="importFrom()" autocorrect="false" class="input" (textChange)="importFrom.set($any($event).value)"></TextField>
+      <Button [text]="s.t().bank.saveSettings" class="secondary" (tap)="saveSettings()"></Button>
+      <Button [text]="s.t().bank.connect" class="primary" [isEnabled]="!bank.busy()" (tap)="connect()"></Button>
+
+      <Label [text]="s.t().bank.pasteTitle" class="section-title"></Label>
+      <TextField [text]="pasted()" [hint]="s.t().bank.pasteHint" autocorrect="false" autocapitalizationType="none" class="input" (textChange)="pasted.set($any($event).value)"></TextField>
+      <Button [text]="s.t().bank.pasteAction" class="secondary" [isEnabled]="!bank.busy() && pasted() !== ''" (tap)="finish()"></Button>
+
+      <Button [text]="s.t().bank.forget" class="danger compact" [visibility]="bank.hasKey() || applicationId() ? 'visible' : 'collapse'" (tap)="forget()"></Button>
+    </StackLayout>
+  </ScrollView>
+</GridLayout>

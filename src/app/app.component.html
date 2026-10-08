@@ -1,24 +1,30 @@
 <RadSideDrawer [drawerTransition]="transition" [drawerContentSize]="drawerWidth">
-  <GridLayout tkDrawerContent rows="auto, *" class="drawer">
-    <Label row="0" [text]="s.t().appName" class="drawer-title"></Label>
+  <GridLayout tkDrawerContent rows="auto, *, auto" class="drawer">
+    <GridLayout row="0" columns="auto, *, auto" rows="auto" class="drawer-header">
+      <Label col="0" [text]="logo" class="mdi drawer-logo" verticalAlignment="middle" horizontalAlignment="center"></Label>
+      <Label col="1" [text]="s.t().appName" class="drawer-title" verticalAlignment="middle"></Label>
+      <Label col="2" [text]="settingsIcon" [class]="url() === '/settings' ? 'mdi drawer-settings drawer-settings-active' : 'mdi drawer-settings'"
+             verticalAlignment="middle" nsPress (tap)="go('/settings')"></Label>
+    </GridLayout>
 
     <ScrollView row="1">
-      <StackLayout>
+      <StackLayout class="drawer-list">
         @for (item of items(); track item.url) {
-          <GridLayout columns="auto, *" rows="auto" [class]="item.url === url() ? 'drawer-item drawer-item-active' : 'drawer-item'" (tap)="go(item.url)">
-            <Label col="0" [text]="item.icon" class="mdi drawer-icon"></Label>
-            <Label col="1" [text]="item.label" class="drawer-label"></Label>
-          </GridLayout>
-        }
-
-        @if (sync.active()) {
-          <GridLayout columns="auto, *" rows="auto" class="drawer-item drawer-sync" (tap)="onSyncTap()">
-            <Label col="0" [text]="syncIcon()" [class]="'mdi drawer-icon sync-' + sync.status().state"></Label>
-            <Label col="1" [text]="syncText()" textWrap="true" class="drawer-label"></Label>
+          <GridLayout columns="4, auto, *" rows="auto" [class]="item.url === url() ? 'drawer-item drawer-item-active' : 'drawer-item'" nsPress (tap)="go(item.url)">
+            <Label col="0" class="drawer-bar"></Label>
+            <Label col="1" [text]="item.icon" class="mdi drawer-icon"></Label>
+            <Label col="2" [text]="item.label" class="drawer-label"></Label>
           </GridLayout>
         }
       </StackLayout>
     </ScrollView>
+
+    @if (sync.active()) {
+      <GridLayout row="2" columns="auto, *" rows="auto" class="drawer-sync" nsPress (tap)="onSyncTap()">
+        <Label col="0" [text]="syncIcon()" [class]="'mdi drawer-sync-icon sync-' + sync.status().state"></Label>
+        <Label col="1" [text]="syncText()" textWrap="true" class="drawer-sync-text"></Label>
+      </GridLayout>
+    }
   </GridLayout>
 
   <GridLayout tkMainContent>

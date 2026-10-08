@@ -52,6 +52,7 @@ export const UI_ICONS = {
   cloudOffline: glyph('cloud-off-outline'),
   cloudError: glyph('cloud-alert-outline'),
   menu: glyph('menu'),
+  logo: glyph('wallet'),
   transactions: glyph('format-list-bulleted'),
   categories: glyph('tag'),
   history: glyph('history'),

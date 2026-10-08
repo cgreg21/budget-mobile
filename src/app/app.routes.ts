@@ -8,4 +8,5 @@ export const routes: Routes = [
   { path: 'settings', loadComponent: () => import('./pages/settings/settings.page').then((m) => m.SettingsPage) },
   { path: 'categories', loadComponent: () => import('./pages/categories/categories.page').then((m) => m.CategoriesPage) },
   { path: 'recurrences', loadComponent: () => import('./pages/settings/recurrences/recurrences.page').then((m) => m.RecurrencesPage) },
+  { path: 'bank', loadComponent: () => import('./pages/settings/bank/bank.page').then((m) => m.BankPage) },
 ];

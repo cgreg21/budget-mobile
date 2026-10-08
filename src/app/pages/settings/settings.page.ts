@@ -58,6 +58,10 @@ export class SettingsPage {
     void this.router.navigate(['recurrences'], { transition: pushTransition });
   }
 
+  openBank(): void {
+    void this.router.navigate(['bank'], { transition: pushTransition });
+  }
+
   private formatDateTime(iso: string): string {
     const date = new Date(iso);
     const pad = (n: number): string => String(n).padStart(2, '0');

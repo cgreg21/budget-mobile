@@ -15,10 +15,10 @@
 
     <ns-monthly-lines row="1" [rows]="rows()"></ns-monthly-lines>
 
-    <ScrollView row="2">
+    <ScrollView row="2" (scroll)="reveal.onScroll($any($event))">
       <StackLayout class="stat-list">
         @for (row of history(); track row.month) {
-          <StackLayout class="row" (tap)="open(row.month)">
+          <StackLayout class="row" (loaded)="reveal.add($any($event).object)" (tap)="open(row.month)">
             <GridLayout columns="56, *, auto" rows="auto">
               <Label col="0" [text]="ui.calendar" class="mdi row-icon"></Label>
               <StackLayout col="1" verticalAlignment="middle">

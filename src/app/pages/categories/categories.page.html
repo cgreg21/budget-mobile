@@ -11,25 +11,24 @@
     <Label [text]="error()" textWrap="true" class="error" [visibility]="error() ? 'visible' : 'collapse'"></Label>
   </StackLayout>
 
-  <ScrollView row="2">
+  <ScrollView row="2" (scroll)="reveal.onScroll($any($event))">
     <StackLayout class="form category-list">
       @for (category of b.categories(); track category.name) {
-        <GridLayout class="setting-wrap">
-          <GridLayout columns="auto, *, auto" class="setting">
-            <Label col="0" [text]="glyphOf(category.icon)" class="mdi row-icon" (tap)="pickerTarget.set(category.name)"></Label>
-            <Label col="1" [text]="category.name" verticalAlignment="middle" (tap)="rename(category)"></Label>
-            <Button col="2" [text]="ui.remove" class="mdi icon-btn" (tap)="remove(category)"></Button>
-          </GridLayout>
+        <GridLayout columns="auto, *, auto" rows="auto" class="setting" (loaded)="reveal.add($any($event).object)">
+          <Label col="0" [text]="glyphOf(category.icon)" class="mdi row-icon" (tap)="pickerTarget.set(category.name)"></Label>
+          <Label col="1" [text]="category.name" verticalAlignment="middle" (tap)="rename(category)"></Label>
+          <Button col="2" [text]="ui.remove" class="mdi icon-btn delete-icon" (tap)="remove(category)"></Button>
         </GridLayout>
       }
       <GridLayout height="24"></GridLayout>
     </StackLayout>
   </ScrollView>
+  <GridLayout row="2" class="list-fade" verticalAlignment="bottom" isUserInteractionEnabled="false"></GridLayout>
 
   @if (pickerTarget() !== null) {
     <GridLayout row="1" rowSpan="2">
       <GridLayout class="backdrop" (tap)="pickerTarget.set(null)"></GridLayout>
-      <StackLayout class="card popover" verticalAlignment="top" height="auto">
+      <StackLayout class="card popover" nsAppear nsAppearMode="soft" verticalAlignment="top" height="auto">
         <Label [text]="s.t().categories.pickIcon" class="section-title"></Label>
         <ScrollView height="320">
           <WrapLayout>
@@ -39,6 +38,23 @@
             }
           </WrapLayout>
         </ScrollView>
+      </StackLayout>
+    </GridLayout>
+  }
+
+  @if (renaming() !== null) {
+    <GridLayout row="0" rowSpan="3">
+      <GridLayout class="backdrop" (tap)="cancelRename()"></GridLayout>
+      <StackLayout class="card popover rename-dialog" nsAppear nsAppearMode="soft" verticalAlignment="top" height="auto">
+        <Label [text]="s.t().categories.rename" class="modal-title"></Label>
+        <TextField [text]="renameText()" returnKeyType="done" autocorrect="false" class="input"
+                   (loaded)="focusField($any($event).object)"
+                   (textChange)="renameText.set($any($event).value)" (returnPress)="confirmRename()"></TextField>
+        <Label [text]="error()" textWrap="true" class="error" [visibility]="error() ? 'visible' : 'collapse'"></Label>
+        <GridLayout rows="auto" columns="*, *">
+          <Button col="0" [text]="s.t().common.cancel" class="secondary" (tap)="cancelRename()"></Button>
+          <Button col="1" [text]="s.t().common.save" class="primary apply" (tap)="confirmRename()"></Button>
+        </GridLayout>
       </StackLayout>
     </GridLayout>
   }

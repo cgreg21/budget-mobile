@@ -182,6 +182,27 @@ export class BudgetService {
     if (month === this.selectedMonth()) this.transactions.set(list);
   }
 
+  /** Adds transactions coming from outside (bank), in whatever month they belong to, ignoring the ids already present. Returns how many were added. */
+  importTransactions(list: Transaction[]): number {
+    const byMonth = new Map<MonthKey, Transaction[]>();
+    for (const tx of list) {
+      const month = monthKeyOf(tx.date);
+      byMonth.set(month, [...(byMonth.get(month) ?? []), tx]);
+    }
+
+    let added = 0;
+    for (const [month, incoming] of byMonth) {
+      const current = this.transactionsOf(month);
+      const known = new Set(current.map((tx) => tx.id));
+      const fresh = incoming.filter((tx) => !known.has(tx.id));
+      if (fresh.length === 0) continue;
+      this.replaceMonth(month, sortByDateDesc([...current, ...fresh]));
+      notifyLocalChange(monthFilePath(month));
+      added += fresh.length;
+    }
+    return added;
+  }
+
   replaceThresholds(thresholds: BalanceThresholds): void {
     this.thresholds.set(thresholds);
     writeJson(THRESHOLDS_KEY, thresholds);

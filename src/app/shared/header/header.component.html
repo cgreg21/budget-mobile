@@ -1,7 +1,7 @@
 <GridLayout columns="auto, *, auto" rows="auto" class="app-bar">
-  <Label col="0" [text]="ui.menu" class="mdi bar-icon" (tap)="d.show()"></Label>
+  <Label col="0" [text]="ui.menu" nsPress class="mdi bar-icon" (tap)="d.show()"></Label>
   <Label col="1" [text]="title()" class="bar-title"></Label>
   @if (filterActive() !== null) {
-    <Label col="2" [text]="ui.filters" [class]="filterActive() ? 'mdi bar-icon bar-icon-active' : 'mdi bar-icon'" (tap)="filtersTap.emit()"></Label>
+    <Label col="2" [text]="ui.filters" nsPress [class]="filterActive() ? 'mdi bar-icon bar-icon-active' : 'mdi bar-icon'" (tap)="filtersTap.emit()"></Label>
   }
 </GridLayout>

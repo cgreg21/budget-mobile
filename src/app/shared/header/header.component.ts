@@ -4,6 +4,7 @@ import { Page } from '@nativescript/core';
 
 import { DrawerService } from '../../core/drawer.service';
 import { UI_ICONS } from '../icons';
+import { PressDirective } from '../motion';
 
 /**
  * Header of the top-level pages: the drawer button on the left, the title, and
@@ -13,7 +14,7 @@ import { UI_ICONS } from '../icons';
  */
 @Component({
   selector: 'ns-header',
-  imports: [NativeScriptCommonModule],
+  imports: [NativeScriptCommonModule, PressDirective],
   schemas: [NO_ERRORS_SCHEMA],
   templateUrl: './header.component.html',
 })

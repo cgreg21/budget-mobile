@@ -13,10 +13,10 @@
     </GridLayout>
 
     <GridLayout row="2" columns="*, *" class="tab-bar">
-      <GridLayout col="0" [class]="pager.tabClass('all')" (tap)="pager.select('all')">
+      <GridLayout col="0" nsPress [class]="pager.tabClass('all')" (tap)="pager.select('all')">
         <Label [text]="ui.transactions" class="mdi tab-icon" horizontalAlignment="center" verticalAlignment="middle"></Label>
       </GridLayout>
-      <GridLayout col="1" [class]="pager.tabClass('recurring')" (tap)="pager.select('recurring')">
+      <GridLayout col="1" nsPress [class]="pager.tabClass('recurring')" (tap)="pager.select('recurring')">
         <Label [text]="ui.repeat" class="mdi tab-icon" horizontalAlignment="center" verticalAlignment="middle"></Label>
       </GridLayout>
     </GridLayout>

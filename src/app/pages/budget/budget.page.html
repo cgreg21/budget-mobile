@@ -5,15 +5,15 @@
     <ns-month-bar row="0" [month]="b.selectedMonth()" (monthChange)="b.selectMonth($event)" (labelTap)="chooseMonth()"></ns-month-bar>
 
     <GridLayout row="1" rows="auto, auto" columns="*, *" class="summary">
-      <StackLayout row="0" col="0" colSpan="2" [class]="'card balance-card level-' + level()">
+      <StackLayout row="0" col="0" colSpan="2" nsAppear="0" [class]="'card balance-card level-' + level()">
         <Label [text]="s.t().budget.balance + ' - ' + s.t().levels[level()]" class="card-title"></Label>
         <Label [text]="s.formatAmount(b.totals().balance)" class="balance-value"></Label>
       </StackLayout>
-      <StackLayout row="1" col="0" class="card stat-income">
+      <StackLayout row="1" col="0" nsAppear="90" class="card stat-income">
         <Label [text]="s.t().budget.income" class="card-title"></Label>
         <Label [text]="s.formatAmount(b.totals().income)" class="amount income"></Label>
       </StackLayout>
-      <StackLayout row="1" col="1" class="card stat-expense">
+      <StackLayout row="1" col="1" nsAppear="180" class="card stat-expense">
         <Label [text]="s.t().budget.expenses" class="card-title"></Label>
         <Label [text]="s.formatAmount(b.totals().expense)" class="amount expense"></Label>
       </StackLayout>
@@ -23,17 +23,17 @@
       @for (panel of panels(); track panel.key) {
         <GridLayout (loaded)="pager.register(panel.key, $any($event).object)">
           @if (b.transactions().length === 0) {
-            <StackLayout verticalAlignment="middle" class="empty">
+            <StackLayout verticalAlignment="middle" nsAppear class="empty">
               <Label [text]="s.t().budget.emptyTitle" class="empty-title"></Label>
               <Label [text]="s.t().budget.emptyText" textWrap="true" class="empty-text"></Label>
             </StackLayout>
           } @else if (panel.items.length === 0) {
             <Label [text]="panel.message" textWrap="true" verticalAlignment="middle" class="empty-text"></Label>
           } @else {
-            <ScrollView class="list">
+            <ScrollView class="list" (scroll)="reveal.onScroll($any($event))">
               <StackLayout class="list-content">
                 @for (item of panel.items; track item.id) {
-                  <GridLayout class="row-wrap">
+                  <GridLayout class="row-wrap" (loaded)="reveal.add($any($event).object)">
                     <Button [text]="s.t().common.delete" class="swipe-delete" horizontalAlignment="right" (tap)="deleteFromSwipe(item)"></Button>
                     <GridLayout columns="56, *, auto" class="row" (tap)="edit(item)" (pan)="onPan($any($event))">
                       <Label col="0" [text]="b.categoryGlyph(item.category)" class="mdi row-icon"></Label>
@@ -53,20 +53,20 @@
     </GridLayout>
 
     <GridLayout row="3" columns="*, *" class="tab-bar">
-      <GridLayout col="0" [class]="pager.tabClass('oneoff')" (tap)="pager.select('oneoff')">
+      <GridLayout col="0" nsPress [class]="pager.tabClass('oneoff')" (tap)="pager.select('oneoff')">
         <GridLayout horizontalAlignment="center" verticalAlignment="middle" class="tab-icon-wrap">
           <Label [text]="ui.transactions" class="mdi tab-icon"></Label>
           <Label [text]="'' + oneOffCount()" class="tab-badge" horizontalAlignment="right" verticalAlignment="top"></Label>
         </GridLayout>
       </GridLayout>
-      <GridLayout col="1" [class]="pager.tabClass('recurring')" (tap)="pager.select('recurring')">
+      <GridLayout col="1" nsPress [class]="pager.tabClass('recurring')" (tap)="pager.select('recurring')">
         <GridLayout horizontalAlignment="center" verticalAlignment="middle" class="tab-icon-wrap">
           <Label [text]="ui.repeat" class="mdi tab-icon"></Label>
           <Label [text]="'' + recurringCount()" class="tab-badge" horizontalAlignment="right" verticalAlignment="top"></Label>
         </GridLayout>
       </GridLayout>
     </GridLayout>
-    <Button [text]="ui.add" class="mdi fab" row="2" rowSpan="2" horizontalAlignment="center" verticalAlignment="bottom" (tap)="openEditor(null)"></Button>
+    <Button [text]="ui.add" nsAppear="350" nsAppearMode="pop" nsPress class="mdi fab" row="2" rowSpan="2" horizontalAlignment="center" verticalAlignment="bottom" (tap)="openEditor(null)"></Button>
   </GridLayout>
 
 </GridLayout>

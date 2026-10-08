@@ -11,6 +11,8 @@ import { SettingsService } from '../../core/settings.service';
 import { UI_ICONS } from '../../shared/icons';
 import { injectSheetOpener } from '../../shared/bottom-sheet';
 import { HeaderComponent } from '../../shared/header/header.component';
+import { ListReveal } from '../../shared/list-reveal';
+import { AppearDirective, PressDirective } from '../../shared/motion';
 import { MonthBarComponent } from '../../shared/month-bar/month-bar.component';
 import { MonthPickerModalComponent } from '../../shared/month-picker-modal/month-picker-modal.component';
 import { TabPager } from '../../shared/tab-pager';
@@ -26,7 +28,7 @@ const TABS = ['oneoff', 'recurring'] as const;
 
 @Component({
   selector: 'ns-budget',
-  imports: [NativeScriptCommonModule, HeaderComponent, MonthBarComponent],
+  imports: [NativeScriptCommonModule, HeaderComponent, MonthBarComponent, AppearDirective, PressDirective],
   schemas: [NO_ERRORS_SCHEMA],
   templateUrl: './budget.page.html',
 })
@@ -36,6 +38,7 @@ export class BudgetPage {
   private readonly openSheet = injectSheetOpener();
   readonly ui = UI_ICONS;
   readonly pager = new TabPager(TABS);
+  readonly reveal = new ListReveal();
 
   readonly filter = signal<TransactionFilter>(NO_FILTER);
   readonly hasFilters = computed(() => isFilterActive(this.filter()));
@@ -72,7 +75,7 @@ export class BudgetPage {
   }
 
   openEditor(id: string | null): void {
-    void this.openSheet(EditorModalComponent, { id });
+    void this.openSheet(EditorModalComponent, { id }, true);
   }
 
   async chooseMonth(): Promise<void> {

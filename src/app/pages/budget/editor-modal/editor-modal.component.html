@@ -1,9 +1,8 @@
-<GridLayout [class]="themeClass" verticalAlignment="bottom" (loaded)="dockToBottom($any($event).object)">
-  <StackLayout class="modal">
-    <Label class="sheet-handle" horizontalAlignment="center"></Label>
-    <Label [text]="existing ? s.t().editor.editTitle : s.t().editor.newTitle" class="modal-title"></Label>
+<GridLayout [class]="themeClass + ' modal-root'" (loaded)="avoidKeyboard($any($event).object)">
+  <GridLayout rows="auto, *, auto" class="modal modal-full">
+    <Label row="0" [text]="existing ? s.t().editor.editTitle : s.t().editor.newTitle" class="modal-title"></Label>
 
-    <ScrollView [height]="bodyHeight">
+    <ScrollView row="1" (loaded)="bindScroll($any($event).object)">
       <StackLayout>
         <GridLayout rows="auto" columns="*, *" class="kind-toggle">
           <Button col="0" [text]="s.t().common.expense" [class]="chip(kind() === 'expense')" (tap)="kind.set('expense')"></Button>
@@ -12,10 +11,12 @@
 
         <Label [text]="s.t().editor.amount" class="field-label"></Label>
         <TextField [text]="amount()" keyboardType="decimal" hint="0.00" class="input"
+                   (focus)="revealField($any($event).object)"
                    (textChange)="amount.set($any($event).value)"></TextField>
 
         <Label [text]="s.t().editor.description" class="field-label"></Label>
-        <TextField [text]="description()" class="input" (textChange)="description.set($any($event).value)"></TextField>
+        <TextField [text]="description()" class="input" (focus)="revealField($any($event).object)"
+                   (textChange)="description.set($any($event).value)"></TextField>
 
         <Label [text]="s.t().editor.category" class="field-label"></Label>
         <GridLayout rows="*" columns="auto, *" class="select" (tap)="pickCategory()">
@@ -40,6 +41,7 @@
           @if (limited()) {
             <Label [text]="s.t().editor.occurrences" class="field-label"></Label>
             <TextField [text]="occurrences()" keyboardType="integer" class="input"
+                       (focus)="revealField($any($event).object)"
                        (textChange)="occurrences.set($any($event).value)"></TextField>
           }
         }
@@ -51,9 +53,9 @@
         }
       </StackLayout>
     </ScrollView>
-    <GridLayout rows="auto" columns="*, *">
+    <GridLayout row="2" rows="auto" columns="*, *">
       <Button col="0" [text]="s.t().common.cancel" class="secondary" (tap)="close()"></Button>
       <Button col="1" [text]="s.t().common.save" class="primary apply" (tap)="save()"></Button>
     </GridLayout>
-  </StackLayout>
+  </GridLayout>
 </GridLayout>

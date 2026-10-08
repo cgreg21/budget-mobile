@@ -29,6 +29,10 @@
         <Label col="0" [text]="s.t().settings.recurrences"></Label>
         <Label col="1" text="&#x203A;" class="setting-value"></Label>
       </GridLayout>
+      <GridLayout columns="*, auto" class="setting" (tap)="openBank()">
+        <Label col="0" [text]="s.t().bank.title"></Label>
+        <Label col="1" text="&#x203A;" class="setting-value"></Label>
+      </GridLayout>
 
       <Label [text]="s.t().sync.title" class="section-title"></Label>
       <Label [text]="syncProvider() === 'icloud' ? s.t().sync.icloudHelp : s.t().sync.help" textWrap="true" class="row-sub"></Label>

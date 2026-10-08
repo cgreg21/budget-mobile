@@ -58,6 +58,19 @@ export interface Strings {
     from(month: string): string; range(start: string, end: string, count: number): string;
     dayOf(day: number): string;
   };
+  bank: {
+    title: string; help: string; keyWarning: string;
+    applicationId: string; privateKey: string; privateKeyKept: string; saveCredentials: string; forget: string;
+    bank: string; chooseBank: string; noBank: string; connect: string;
+    redirectUrl: string; redirectHelp: string; importFrom: string; saveSettings: string;
+    pasteTitle: string; pasteHint: string; pasteAction: string;
+    importNow: string; disconnect: string; notConnectedStatus: string; connectedStatus(bank: string, accounts: number): string;
+    validUntil(date: string): string; lastImport(date: string): string; never: string; renewNote: string;
+    invalidDate: string; waitingForBank: string; refused(reason: string): string; unexpectedReturn: string;
+    noCode: string; notConnected: string; expired: string; imported(count: number): string;
+    missingCredentials: string; failed(message: string): string; network: string; rateLimit: string;
+    authRefused(message: string): string;
+  };
 }
 
 const en: Strings = {
@@ -143,6 +156,40 @@ const en: Strings = {
     from: (month) => `from ${month}`, range: (start, end, count) => `${start} - ${end} (${count} times)`,
     dayOf: (day) => `day ${day}`,
   },
+  bank: {
+    title: 'Bank',
+    help: 'Imports the transactions of your bank account through Enable Banking (free for your own accounts). '
+      + 'Register an application on enablebanking.com, link your accounts, then enter its identifier and private key here.',
+    keyWarning: 'The private key is stored in this device\'s secure storage only. Never share it.',
+    applicationId: 'Application identifier', privateKey: 'Private key (PEM)',
+    privateKeyKept: 'A key is saved. Paste a new one to replace it.',
+    saveCredentials: 'Save credentials', forget: 'Remove credentials',
+    bank: 'Bank', chooseBank: 'Choose a bank', noBank: 'No bank found.', connect: 'Connect the bank',
+    redirectUrl: 'Return address',
+    redirectHelp: 'Must be registered in your Enable Banking application. If the app does not open by itself after the bank, '
+      + 'copy the address shown by the browser into the field below.',
+    importFrom: 'Import from (YYYY-MM-DD)', saveSettings: 'Save',
+    pasteTitle: 'Finish the connection by hand', pasteHint: 'Address or code received from the bank',
+    pasteAction: 'Validate',
+    importNow: 'Import now', disconnect: 'Disconnect',
+    notConnectedStatus: 'Not connected',
+    connectedStatus: (bank, accounts) => `Connected to ${bank} (${accounts === 1 ? '1 account' : `${accounts} accounts`})`,
+    validUntil: (date) => `Access valid until ${date}`, lastImport: (date) => `Last import: ${date}`, never: 'never',
+    renewNote: 'The bank asks to renew the access about every 90 days. Imports are limited to a few per day.',
+    invalidDate: 'Enter the date as YYYY-MM-DD.',
+    waitingForBank: 'Finish the authorisation in the browser; the app will import the transactions when you come back.',
+    refused: (reason) => `The bank refused the connection: ${reason}`,
+    unexpectedReturn: 'This return does not match a connection started from this app. Start the connection again.',
+    noCode: 'No authorisation code found.',
+    notConnected: 'Connect a bank first.',
+    expired: 'The access to the bank has expired. Connect the bank again.',
+    imported: (count) => (count === 0 ? 'Up to date: no new transaction.' : count === 1 ? '1 transaction imported.' : `${count} transactions imported.`),
+    missingCredentials: 'Enter the application identifier and the private key first.',
+    failed: (message) => `The request failed: ${message}`,
+    network: 'The bank service cannot be reached. Try again later.',
+    rateLimit: 'Too many requests: the bank limits the number of imports per day. Try again later.',
+    authRefused: (message) => `Access refused (check the identifier and the key): ${message}`,
+  },
 };
 
 const fr: Strings = {
@@ -227,6 +274,40 @@ const fr: Strings = {
     deleteBody: (name) => `Arrêter « ${name} » ? Les occurrences déjà créées restent dans leurs mois.`,
     from: (month) => `à partir de ${month}`, range: (start, end, count) => `${start} - ${end} (${count} fois)`,
     dayOf: (day) => `le ${day}`,
+  },
+  bank: {
+    title: 'Banque',
+    help: 'Importe les transactions de votre compte bancaire via Enable Banking (gratuit pour vos propres comptes). '
+      + 'Créez une application sur enablebanking.com, liez vos comptes, puis saisissez ici son identifiant et sa clé privée.',
+    keyWarning: 'La clé privée est conservée uniquement dans le stockage sécurisé de cet appareil. Ne la partagez jamais.',
+    applicationId: 'Identifiant de l’application', privateKey: 'Clé privée (PEM)',
+    privateKeyKept: 'Une clé est enregistrée. Collez-en une nouvelle pour la remplacer.',
+    saveCredentials: 'Enregistrer les identifiants', forget: 'Supprimer les identifiants',
+    bank: 'Banque', chooseBank: 'Choisir une banque', noBank: 'Aucune banque trouvée.', connect: 'Connecter la banque',
+    redirectUrl: 'Adresse de retour',
+    redirectHelp: 'Doit être déclarée dans votre application Enable Banking. Si l’app ne s’ouvre pas toute seule après la banque, '
+      + 'copiez l’adresse affichée par le navigateur dans le champ ci-dessous.',
+    importFrom: 'Importer à partir du (AAAA-MM-JJ)', saveSettings: 'Enregistrer',
+    pasteTitle: 'Terminer la connexion à la main', pasteHint: 'Adresse ou code reçu de la banque',
+    pasteAction: 'Valider',
+    importNow: 'Importer maintenant', disconnect: 'Déconnecter',
+    notConnectedStatus: 'Non connecté',
+    connectedStatus: (bank, accounts) => `Connecté à ${bank} (${accounts === 1 ? '1 compte' : `${accounts} comptes`})`,
+    validUntil: (date) => `Accès valable jusqu’au ${date}`, lastImport: (date) => `Dernier import : ${date}`, never: 'jamais',
+    renewNote: 'La banque demande de renouveler l’accès environ tous les 90 jours. Les imports sont limités à quelques-uns par jour.',
+    invalidDate: 'Saisissez la date au format AAAA-MM-JJ.',
+    waitingForBank: 'Terminez l’autorisation dans le navigateur ; l’app importera les transactions à votre retour.',
+    refused: (reason) => `La banque a refusé la connexion : ${reason}`,
+    unexpectedReturn: 'Ce retour ne correspond à aucune connexion démarrée depuis l’app. Relancez la connexion.',
+    noCode: 'Aucun code d’autorisation trouvé.',
+    notConnected: 'Connectez d’abord une banque.',
+    expired: 'L’accès à la banque a expiré. Connectez de nouveau la banque.',
+    imported: (count) => (count === 0 ? 'À jour : aucune nouvelle transaction.' : count === 1 ? '1 transaction importée.' : `${count} transactions importées.`),
+    missingCredentials: 'Saisissez d’abord l’identifiant de l’application et la clé privée.',
+    failed: (message) => `La requête a échoué : ${message}`,
+    network: 'Le service bancaire est injoignable. Réessayez plus tard.',
+    rateLimit: 'Trop de requêtes : la banque limite le nombre d’imports par jour. Réessayez plus tard.',
+    authRefused: (message) => `Accès refusé (vérifiez l’identifiant et la clé) : ${message}`,
   },
 };
 

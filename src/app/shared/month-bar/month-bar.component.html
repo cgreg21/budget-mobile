@@ -1,7 +1,7 @@
 <GridLayout rows="auto" columns="auto, auto, *, auto, auto" class="month-bar">
-  <Button col="0" [text]="ui.previousYear" class="mdi nav-btn" (tap)="shiftYear(-1)"></Button>
-  <Button col="1" [text]="ui.previous" class="mdi nav-btn" [isEnabled]="hasOlder()" (tap)="shift(-1)"></Button>
+  <Button col="0" [text]="ui.previousYear" nsPress class="mdi nav-btn" (tap)="shiftYear(-1)"></Button>
+  <Button col="1" [text]="ui.previous" nsPress class="mdi nav-btn" [isEnabled]="hasOlder()" (tap)="shift(-1)"></Button>
   <Label col="2" [text]="s.monthLabel(month())" class="month-label" (tap)="labelTap.emit()"></Label>
-  <Button col="3" [text]="ui.next" class="mdi nav-btn" [isEnabled]="hasNewer()" (tap)="shift(1)"></Button>
-  <Button col="4" [text]="ui.nextYear" class="mdi nav-btn" (tap)="shiftYear(1)"></Button>
+  <Button col="3" [text]="ui.next" nsPress class="mdi nav-btn" [isEnabled]="hasNewer()" (tap)="shift(1)"></Button>
+  <Button col="4" [text]="ui.nextYear" nsPress class="mdi nav-btn" (tap)="shiftYear(1)"></Button>
 </GridLayout>

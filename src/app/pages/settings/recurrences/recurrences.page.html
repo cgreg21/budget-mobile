@@ -2,19 +2,21 @@
   <ActionBar row="0" [title]="s.t().recurrences.title">
     <NavigationButton [text]="s.t().common.back" android.systemIcon="ic_menu_back" (tap)="router.back()"></NavigationButton>
   </ActionBar>
-  <ScrollView row="1">
+  <ScrollView row="1" (scroll)="reveal.onScroll($any($event))">
     <StackLayout class="form">
       @for (r of b.recurrences(); track r.id) {
-        <GridLayout columns="*, auto" class="setting">
-          <StackLayout col="0">
-            <Label [text]="r.description || s.t().common.noDescription" class="row-title"></Label>
-            <Label [text]="details(r)" textWrap="true" class="row-sub"></Label>
-          </StackLayout>
-          <Label col="1" [text]="s.formatSigned(r.kind, r.amount)" [class]="'row-amount ' + r.kind" verticalAlignment="middle"></Label>
-        </GridLayout>
-        <Button [text]="s.t().common.delete" class="danger compact" (tap)="remove(r)"></Button>
+        <StackLayout (loaded)="reveal.add($any($event).object)">
+          <GridLayout columns="*, auto" class="setting">
+            <StackLayout col="0">
+              <Label [text]="r.description || s.t().common.noDescription" class="row-title"></Label>
+              <Label [text]="details(r)" textWrap="true" class="row-sub"></Label>
+            </StackLayout>
+            <Label col="1" [text]="s.formatSigned(r.kind, r.amount)" [class]="'row-amount ' + r.kind" verticalAlignment="middle"></Label>
+          </GridLayout>
+          <Button [text]="s.t().common.delete" class="danger compact" (tap)="remove(r)"></Button>
+        </StackLayout>
       } @empty {
-        <Label [text]="s.t().recurrences.empty" textWrap="true" class="empty-text"></Label>
+        <Label [text]="s.t().recurrences.empty" textWrap="true" nsAppear class="empty-text"></Label>
       }
     </StackLayout>
   </ScrollView>

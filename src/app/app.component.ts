@@ -4,10 +4,12 @@ import { PageRouterOutlet, RouterExtensions } from '@nativescript/angular';
 import { SlideInOnTopTransition } from 'nativescript-ui-sidedrawer';
 import { NativeScriptUISideDrawerModule } from 'nativescript-ui-sidedrawer/angular';
 
+import { BankService } from './core/bank/bank.service';
 import { DrawerService } from './core/drawer.service';
 import { SettingsService } from './core/settings.service';
 import { SyncService } from './core/sync.service';
 import { UI_ICONS } from './shared/icons';
+import { PressDirective } from './shared/motion';
 import { pageTransition } from './shared/page-transition';
 
 const DRAWER_WIDTH = 280;
@@ -15,14 +17,17 @@ const DRAWER_WIDTH = 280;
 @Component({
   selector: 'ns-app',
   templateUrl: './app.component.html',
-  imports: [PageRouterOutlet, NativeScriptUISideDrawerModule],
+  imports: [PageRouterOutlet, NativeScriptUISideDrawerModule, PressDirective],
   schemas: [NO_ERRORS_SCHEMA],
 })
 export class AppComponent {
   readonly transition = new SlideInOnTopTransition();
   readonly drawerWidth = DRAWER_WIDTH;
+  readonly logo = UI_ICONS.logo;
+  readonly settingsIcon = UI_ICONS.settings;
   readonly s = inject(SettingsService);
   readonly sync = inject(SyncService);
+  private readonly bank = inject(BankService);
   private readonly drawer = inject(DrawerService);
   private readonly nav = inject(RouterExtensions);
 
@@ -36,7 +41,6 @@ export class AppComponent {
       { url: '/categories', icon: UI_ICONS.categories, label: t.categories.title },
       { url: '/stats', icon: UI_ICONS.stats, label: t.stats.title },
       { url: '/history', icon: UI_ICONS.history, label: t.stats.history },
-      { url: '/settings', icon: UI_ICONS.settings, label: t.settings.title },
     ];
   });
 
@@ -58,6 +62,7 @@ export class AppComponent {
 
   constructor() {
     this.sync.start();
+    this.bank.start();
     inject(Router).events.subscribe((event) => {
       if (event instanceof NavigationEnd) this.url.set(event.urlAfterRedirects);
     });

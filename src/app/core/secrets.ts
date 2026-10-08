@@ -1,45 +1,52 @@
-import { SecureStorage } from '@nativescript/secure-storage';
+﻿import { SecureStorage } from '@nativescript/secure-storage';
 
 const PASSWORD_KEY = 'remote-password';
+const BANK_KEY_KEY = 'bank-private-key';
 
 let storage: SecureStorage | null | undefined;
 // Used only when the native secure storage is missing from the running app: never written to disk.
-let sessionPassword = '';
+const sessionSecrets = new Map<string, string>();
 
 function secure(): SecureStorage | null {
   if (storage === undefined) {
     try {
       storage = new SecureStorage();
     } catch (error) {
-      console.warn('Secure storage is unavailable, the password is kept for this session only:', error);
+      console.warn('Secure storage is unavailable, secrets are kept for this session only:', error);
       storage = null;
     }
   }
   return storage;
 }
 
-/** Whether the password survives an app restart. */
+/** Whether the secrets survive an app restart. */
 export const isPasswordPersistent = (): boolean => secure() !== null;
 
-export function readPassword(): string {
+function readSecret(key: string): string {
   const store = secure();
-  if (store === null) return sessionPassword;
+  if (store === null) return sessionSecrets.get(key) ?? '';
   try {
-    const value: unknown = store.getSync({ key: PASSWORD_KEY });
+    const value: unknown = store.getSync({ key });
     return typeof value === 'string' ? value : '';
   } catch {
-    return sessionPassword;
+    return sessionSecrets.get(key) ?? '';
   }
 }
 
-export function writePassword(password: string): void {
-  sessionPassword = password;
+function writeSecret(key: string, value: string): void {
+  sessionSecrets.set(key, value);
   const store = secure();
   if (store === null) return;
   try {
-    if (password === '') store.removeSync({ key: PASSWORD_KEY });
-    else store.setSync({ key: PASSWORD_KEY, value: password });
+    if (value === '') store.removeSync({ key });
+    else store.setSync({ key, value });
   } catch (error) {
-    console.warn('The password could not be saved securely:', error);
+    console.warn('A secret could not be saved securely:', error);
   }
 }
+
+export const readPassword = (): string => readSecret(PASSWORD_KEY);
+export const writePassword = (password: string): void => writeSecret(PASSWORD_KEY, password);
+
+export const readBankKey = (): string => readSecret(BANK_KEY_KEY);
+export const writeBankKey = (privateKey: string): void => writeSecret(BANK_KEY_KEY, privateKey);

@@ -33,6 +33,8 @@ src/app/
 │   ├── bottom-sheet.ts       classe de base des feuilles du bas et fonction d'ouverture
 │   ├── tab-pager.ts          onglets glissants (Transactions, Statistiques)
 │   ├── page-transition.ts    sens de l'animation entre les pages
+│   ├── motion.ts             directives `nsAppear` (apparition) et `nsPress` (effet d'appui)
+│   ├── list-reveal.ts        apparition des lignes d'une liste à l'entrée dans l'écran (scroll haut/bas)
 │   ├── canvas-polyfill.ts    canvas iOS pour les graphiques
 │   ├── header/               en-tête (menu, filtres)
 │   ├── month-bar/            barre de navigation par mois
@@ -110,6 +112,24 @@ Aucune adresse ni mot de passe : c'est le compte iCloud de l'appareil.
   avec un message explicite.
 - L'application de bureau (GTK) ne lit pas iCloud : pour partager avec elle, utiliser kDrive.
 - Changer de support (kDrive ↔ iCloud) repart d'une première synchronisation.
+
+## Import bancaire (Enable Banking)
+
+Réglages → Banque importe les opérations d'un compte (visé : Crédit Mutuel de Bretagne) via l'agrégateur [Enable Banking](https://enablebanking.com), gratuit pour ses propres comptes.
+
+1. Sur enablebanking.com/cp, créer une application en mode production restreint, lier son compte,
+   déclarer l'adresse de retour (`budgetmobile://bank` par défaut) et télécharger la clé privée (PEM).
+2. Dans l'app : saisir l'identifiant de l'application et coller la clé (stockée dans le stockage sécurisé
+   de l'appareil, jamais dans les fichiers synchronisés), choisir la banque puis « Connecter la banque ».
+3. Après l'autorisation, la banque renvoie vers l'app (schéma `budgetmobile://`, déclaré dans
+   `Info.plist` et `AndroidManifest.xml`). Sinon, coller l'adresse affichée dans le champ prévu.
+
+- `core/bank/jwt.ts` : jeton RS256 signé sur l'appareil ; `core/bank/enable-banking.ts` : client HTTP ;
+  `core/bank/bank-mapping.ts` : conversion en transactions (catégorie devinée, identifiants déterministes) ;
+  `core/bank/bank.service.ts` : connexion, import, import automatique au plus toutes les 6 h.
+- Les identifiants étant déterministes, la synchro WebDAV entre appareils ne crée pas de doublons ; une
+  transaction supprimée n'est pas réimportée.
+- L'accès doit être renouvelé environ tous les 90 jours ; la banque limite les imports automatiques (~4/jour).
 
 ## Lancer
 

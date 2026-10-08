@@ -6,11 +6,12 @@ import {
 
 import { SettingsService } from '../../core/settings.service';
 import { UI_ICONS } from '../icons';
+import { PressDirective } from '../motion';
 
 /** Previous/next month and year buttons around the month label, which opens the month picker. */
 @Component({
   selector: 'ns-month-bar',
-  imports: [NativeScriptCommonModule],
+  imports: [NativeScriptCommonModule, PressDirective],
   schemas: [NO_ERRORS_SCHEMA],
   templateUrl: './month-bar.component.html',
 })

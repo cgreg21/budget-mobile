@@ -40,6 +40,7 @@ TextField, TextView { font-family: $font-regular; }
 // ---- inputs, buttons, chips ----
 .search, .input, .select, .icon-pick { background-color: $surface; border-width: 1; border-color: $border; border-radius: $radius-md; color: $text; height: $field-height; }
 .search, .input { padding: 0 14; margin: 4 0; placeholder-color: $muted; }
+.input.multiline { height: 130; padding: 10 14; font-size: 12; }
 .select { padding: 0 14; margin: 4 0; text-align: left; font-family: $font-regular; }
 .select-icon { font-size: 22; margin-right: 10; vertical-align: middle; }
 .icon-pick { font-size: 24; margin: 4 6 4 0; padding: 0 10; width: 52; }
@@ -55,15 +56,21 @@ TextField, TextView { font-family: $font-regular; }
 .danger { background-color: $red; color: $bg; margin-top: 16; }
 .compact { margin: 4 0 4 6; padding: 0 16; }
 .icon-btn { background-color: transparent; font-size: 22; height: $field-height; }
+.icon-btn.delete-icon { color: $red; }
 .icon-choice { font-size: 28; width: 56; height: 56; text-align: center; vertical-align: middle; border-radius: $radius-lg; margin: 2; }
 .icon-choice-selected { background-color: $green; color: $bg; }
 .backdrop { background-color: #99000000; }
 .popover { margin: 8 12; padding: 14; box-shadow: 0 8 20 0 rgba(0, 0, 0, 0.5); }
+// Near the top so the keyboard never covers it.
+.rename-dialog { margin-top: 110; }
 
 // ---- bottom sheets ----
 .modal { background-color: $surface; padding: 12 16 24 16; border-top-left-radius: 24; border-top-right-radius: 24; }
 .sheet-handle { width: 40; height: 4; border-radius: 2; background-color: $border; margin-bottom: 12; }
 .modal-title { font-size: 20; font-family: $font-bold; margin-bottom: 8; }
+// Full-screen form: no rounded top, the root carries the surface colour (safe areas, keyboard gap).
+.modal-root { background-color: $surface; }
+.modal-full { border-radius: 0; padding: 12 16; }
 .modal-list { margin: 4 0; }
 .apply { margin-left: 8; }
 .pick-row { padding: 8 10; margin: 2 0; border-radius: $radius-md; }
@@ -74,14 +81,23 @@ TextField, TextView { font-family: $font-regular; }
 .pick-row-selected .pick-icon, .pick-row-selected .pick-check { color: $green; }
 
 // ---- drawer ----
-.drawer { background-color: $surface; padding-bottom: 12; }
-.drawer-title { font-size: 24; font-family: $font-bold; padding: 24 20 16 20; }
-.drawer-item { padding: 12 14; margin: 2 10; border-radius: $radius-md; }
+.drawer { background-color: $surface; padding-bottom: 8; }
+.drawer-header { padding: 28 20 18 20; margin-bottom: 8; border-bottom-width: 1; border-bottom-color: $border; }
+.drawer-logo { width: 42; height: 42; border-radius: $radius-md; background-color: rgba($green, 0.14); color: $green; font-size: 24; text-align: center; vertical-align: middle; margin-right: 14; }
+.drawer-title { font-size: 24; font-family: $font-bold; }
+.drawer-settings { width: 40; height: 40; border-radius: 20; font-size: 24; color: $muted; text-align: center; vertical-align: middle; }
+.drawer-settings-active { background-color: rgba($green, 0.12); color: $green; }
+.drawer-list { padding: 4 16; }
+.drawer-item { padding: 13 14 13 10; margin: 2 0; border-radius: $radius-md; }
 .drawer-item-active { background-color: rgba($green, 0.12); }
-.drawer-icon { font-size: 22; margin-right: 14; vertical-align: middle; color: $muted; }
+.drawer-bar { width: 4; height: 22; border-radius: 2; background-color: transparent; margin-right: 14; vertical-align: middle; }
+.drawer-item-active .drawer-bar { background-color: $green; }
+.drawer-icon { font-size: 22; margin-right: 16; vertical-align: middle; color: $muted; }
 .drawer-label { font-size: 16; font-family: $font-medium; vertical-align: middle; }
 .drawer-item-active .drawer-icon, .drawer-item-active .drawer-label { color: $green; }
-.drawer-sync { margin-top: 12; border-top-width: 1; border-top-color: $border; border-radius: 0; }
+.drawer-sync { margin: 8 16 16 16; padding: 12 14; background-color: $card; border-width: 1; border-color: $border; border-radius: $radius-md; }
+.drawer-sync-icon { font-size: 20; margin-right: 12; vertical-align: middle; color: $muted; }
+.drawer-sync-text { font-size: 14; font-family: $font-medium; vertical-align: middle; color: $muted; }
 .sync-status { margin-top: 8; font-size: 13; color: $muted; }
 .sync-offline { color: $yellow; }
 .sync-error { color: $red; }
@@ -121,6 +137,9 @@ TextField, TextView { font-family: $font-regular; }
 // The add form stays at the top; only the list of categories under it scrolls.
 .category-form { padding-bottom: 6; }
 .category-list { padding-top: 0; }
+// Rows are cut by the bottom edge of the page (above the home indicator): fade them out into the
+// background there instead of showing a hard cut through a rounded row.
+.list-fade { height: 28; background-image: linear-gradient(to bottom, rgba($bg, 0), $bg); }
 .field-label { font-size: 12; color: $muted; margin-top: 14; text-transform: uppercase; }
 .section-title { font-size: 13; font-family: $font-bold; color: $muted; margin-top: 20; text-transform: uppercase; }
 .kind-toggle { margin-bottom: 4; }
@@ -128,8 +147,6 @@ TextField, TextView { font-family: $font-regular; }
 .switch-label { font-size: 16; vertical-align: middle; }
 .error { color: $red; margin-top: 8; }
 .setting { background-color: $card; border-width: 1; border-color: $border; border-radius: $radius-md; padding: 12 14; margin: 3 0; }
-.setting-wrap { background-color: transparent; padding: 3 0; }
-.setting-wrap .setting { margin: 0; }
 .setting-value { color: $green; }
 
 // ---- statistics ----
@@ -151,6 +168,7 @@ TextField, TextView { font-family: $font-regular; }
 // `.ns-light Label` outweighs a plain class, so every coloured label is restated here.
 .ns-light {
   .page { background-color: $light-bg; color: $light-text; }
+  .list-fade { background-image: linear-gradient(to bottom, rgba($light-bg, 0), $light-bg); }
   ActionBar { background-color: $light-surface; color: $light-text; }
   Label { color: $light-text; }
 
@@ -182,12 +200,17 @@ TextField, TextView { font-family: $font-regular; }
   .icon-choice-selected { background-color: $green; color: $light-text; }
 
   .modal, .drawer, .tab-bar { background-color: $light-surface; border-top-color: $light-border; }
+  &.modal-root { background-color: $light-surface; }
   .tabs-page { background-image: linear-gradient(to bottom, $light-bg 50%, $light-surface 50%); }
   .sheet-handle { background-color: $light-border; }
-  .drawer-icon { color: $light-muted; }
+  .drawer-icon, .drawer-sync-icon, .drawer-sync-text, .drawer-settings { color: $light-muted; }
+  .drawer-settings-active { background-color: $light-green-tint; color: $light-green; }
+  .drawer-header { border-bottom-color: $light-border; }
+  .drawer-logo { color: $light-green; background-color: $light-green-tint; }
   .drawer-item-active { background-color: $light-green-tint; }
+  .drawer-item-active .drawer-bar { background-color: $light-green; }
   .drawer-item-active .drawer-icon, .drawer-item-active .drawer-label { color: $light-green; }
-  .drawer-sync { border-top-color: $light-border; }
+  .drawer-sync { background-color: $light-bg; border-color: $light-border; }
 
   .tab-icon { color: $light-muted; }
   .tab-active .tab-icon { color: $light-green; }

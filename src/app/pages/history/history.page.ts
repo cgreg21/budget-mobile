@@ -7,6 +7,7 @@ import { SettingsService } from '../../core/settings.service';
 import { UI_ICONS } from '../../shared/icons';
 import { injectSheetOpener } from '../../shared/bottom-sheet';
 import { HeaderComponent } from '../../shared/header/header.component';
+import { ListReveal } from '../../shared/list-reveal';
 import { MonthPickerModalComponent } from '../../shared/month-picker-modal/month-picker-modal.component';
 import { pageTransition } from '../../shared/page-transition';
 import { MonthlyLinesComponent } from './monthly-lines/monthly-lines.component';
@@ -27,6 +28,7 @@ export class HistoryPage {
   private readonly router = inject(RouterExtensions);
   private readonly openSheet = injectSheetOpener();
   readonly ui = UI_ICONS;
+  readonly reveal = new ListReveal();
 
   readonly end = signal<MonthKey>(this.b.selectedMonth());
   readonly start = signal<MonthKey>(shiftMonth(this.end(), 1 - DEFAULT_MONTHS));

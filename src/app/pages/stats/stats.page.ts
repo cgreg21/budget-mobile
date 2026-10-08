@@ -12,12 +12,13 @@ import { injectSheetOpener } from '../../shared/bottom-sheet';
 import { HeaderComponent } from '../../shared/header/header.component';
 import { MonthBarComponent } from '../../shared/month-bar/month-bar.component';
 import { MonthPickerModalComponent } from '../../shared/month-picker-modal/month-picker-modal.component';
+import { PressDirective } from '../../shared/motion';
 import { TabPager } from '../../shared/tab-pager';
 import { CategoryPieComponent } from './category-pie/category-pie.component';
 
 @Component({
   selector: 'ns-stats',
-  imports: [NativeScriptCommonModule, CategoryPieComponent, HeaderComponent, MonthBarComponent],
+  imports: [NativeScriptCommonModule, CategoryPieComponent, HeaderComponent, MonthBarComponent, PressDirective],
   schemas: [NO_ERRORS_SCHEMA],
   templateUrl: './stats.page.html',
 })

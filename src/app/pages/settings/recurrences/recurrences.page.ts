@@ -5,10 +5,12 @@ import { endMonth, type Recurrence } from 'budget-lib';
 
 import { BudgetService } from '../../../core/budget.service';
 import { SettingsService } from '../../../core/settings.service';
+import { ListReveal } from '../../../shared/list-reveal';
+import { AppearDirective } from '../../../shared/motion';
 
 @Component({
   selector: 'ns-recurrences',
-  imports: [NativeScriptCommonModule],
+  imports: [NativeScriptCommonModule, AppearDirective],
   schemas: [NO_ERRORS_SCHEMA],
   templateUrl: './recurrences.page.html',
 })
@@ -16,6 +18,7 @@ export class RecurrencesPage {
   readonly b = inject(BudgetService);
   readonly s = inject(SettingsService);
   readonly router = inject(RouterExtensions);
+  readonly reveal = new ListReveal();
 
   details(r: Recurrence): string {
     const t = this.s.t();

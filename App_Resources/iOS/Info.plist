@@ -55,6 +55,17 @@
 			<string>Any</string>
 		</dict>
 	</dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>org.nativescript.budgetmobile.bank</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>budgetmobile</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIApplicationSceneManifest</key>
     <dict>
       <key>UIApplicationPreferredDefaultSceneSessionRole</key>

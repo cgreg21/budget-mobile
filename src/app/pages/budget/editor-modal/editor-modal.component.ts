@@ -1,6 +1,6 @@
 import { Component, NO_ERRORS_SCHEMA, inject, signal } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
-import { Dialogs } from '@nativescript/core';
+import { Dialogs, type ScrollView, type View } from '@nativescript/core';
 import {
   MAX_OCCURRENCES, MIN_OCCURRENCES, RECURRENCE_FREQUENCIES, type RecurrenceFrequency,
   type RecurrenceSettings, type TransactionInput, type TransactionKind,
@@ -8,7 +8,7 @@ import {
 
 import { BudgetService } from '../../../core/budget.service';
 import { parseAmount, SettingsService } from '../../../core/settings.service';
-import { BottomSheet, sheetBodyHeight } from '../../../shared/bottom-sheet';
+import { BottomSheet } from '../../../shared/bottom-sheet';
 import { deleteTransaction } from '../delete-transaction';
 
 /** What the transaction editor is opened with: the transaction to edit, or `null` for a new one. */
@@ -16,7 +16,7 @@ export interface EditorContext {
   id: string | null;
 }
 
-/** The transaction form. The sheet closes itself once the transaction is saved or deleted. */
+/** The transaction form, a full-screen modal. It closes itself once the transaction is saved or deleted. */
 @Component({
   selector: 'ns-editor-modal',
   imports: [NativeScriptCommonModule],
@@ -26,7 +26,7 @@ export interface EditorContext {
 export class EditorModalComponent extends BottomSheet<EditorContext> {
   readonly s = inject(SettingsService);
   readonly b = inject(BudgetService);
-  readonly bodyHeight = sheetBodyHeight(0.6);
+  private scroll?: ScrollView;
 
   /** The transaction being edited; `undefined` for a new one. */
   readonly existing = this.b.transactions().find((t) => t.id === this.context.id);
@@ -42,6 +42,25 @@ export class EditorModalComponent extends BottomSheet<EditorContext> {
   readonly limited = signal(this.series?.occurrences !== undefined);
   readonly occurrences = signal(String(this.series?.occurrences ?? 12));
   readonly error = signal('');
+
+  /** Keeps the focused field in view once the keyboard has opened and the body has shrunk. */
+  revealField(field: View): void {
+    setTimeout(() => {
+      const scroll = this.scroll;
+      const content = scroll?.content;
+      if (!scroll || !content) return;
+      const top = field.getLocationRelativeTo(content).y;
+      const bottom = top + field.getActualSize().height;
+      const offset = scroll.verticalOffset;
+      if (top < offset || bottom > offset + scroll.getActualSize().height) {
+        scroll.scrollToVerticalOffset(Math.max(0, top - 16), true);
+      }
+    }, 400);
+  }
+
+  bindScroll(scroll: ScrollView): void {
+    this.scroll = scroll;
+  }
 
   async pickCategory(): Promise<void> {
     const t = this.s.t();
