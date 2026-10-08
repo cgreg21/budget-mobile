@@ -1,11 +1,11 @@
 import { knownFolders, path } from '@nativescript/core';
 import { openOrCreate, type SQLiteDatabase } from '@nativescript-community/sqlite';
+import {
+  DEFAULT_CATEGORIES, fromLegacyCategories, isCategoryList, isLegacyCategoryList, isMonthKey,
+  isRecurrenceList, isTransactionArray, normalizeCategoryIcons, type Category, type MonthKey,
+  type Recurrence, type Transaction,
+} from 'budget-lib';
 
-import { DEFAULT_CATEGORIES, fromLegacyCategories, isCategoryList, isLegacyCategoryList, type Category } from '../domain/category';
-import { normalizeCategoryIcons } from '../domain/category-icons';
-import { isMonthKey, type MonthKey } from '../domain/month';
-import { isRecurrenceList, type Recurrence } from '../domain/recurrence';
-import { isTransactionArray, type Transaction } from '../domain/transaction';
 import { allKeys, readJson, removeKey, writeJson } from './storage';
 
 /** Everything the budget persists, as loaded at startup. */

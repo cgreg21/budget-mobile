@@ -1,0 +1,59 @@
+<GridLayout [class]="themeClass" verticalAlignment="bottom" (loaded)="dockToBottom($any($event).object)">
+  <StackLayout class="modal">
+    <Label class="sheet-handle" horizontalAlignment="center"></Label>
+    <Label [text]="existing ? s.t().editor.editTitle : s.t().editor.newTitle" class="modal-title"></Label>
+
+    <ScrollView [height]="bodyHeight">
+      <StackLayout>
+        <GridLayout rows="auto" columns="*, *" class="kind-toggle">
+          <Button col="0" [text]="s.t().common.expense" [class]="chip(kind() === 'expense')" (tap)="kind.set('expense')"></Button>
+          <Button col="1" [text]="s.t().common.income" [class]="chip(kind() === 'income')" (tap)="kind.set('income')"></Button>
+        </GridLayout>
+
+        <Label [text]="s.t().editor.amount" class="field-label"></Label>
+        <TextField [text]="amount()" keyboardType="decimal" hint="0.00" class="input"
+                   (textChange)="amount.set($any($event).value)"></TextField>
+
+        <Label [text]="s.t().editor.description" class="field-label"></Label>
+        <TextField [text]="description()" class="input" (textChange)="description.set($any($event).value)"></TextField>
+
+        <Label [text]="s.t().editor.category" class="field-label"></Label>
+        <GridLayout rows="*" columns="auto, *" class="select" (tap)="pickCategory()">
+          <Label col="0" [text]="b.categoryGlyph(category())" class="mdi select-icon" verticalAlignment="middle"></Label>
+          <Label col="1" [text]="category()" verticalAlignment="middle"></Label>
+        </GridLayout>
+
+        <GridLayout rows="auto" columns="*, auto" class="switch-row">
+          <Label col="0" [text]="s.t().editor.repeat" class="switch-label"></Label>
+          <Switch col="1" [checked]="repeat()" (checkedChange)="repeat.set($any($event).value)"></Switch>
+        </GridLayout>
+
+        @if (repeat()) {
+          <Label [text]="s.t().editor.frequency" class="field-label"></Label>
+          <Button [text]="s.t().frequency[frequency()]" class="select" (tap)="pickFrequency()"></Button>
+
+          <GridLayout rows="auto" columns="*, auto" class="switch-row">
+            <Label col="0" [text]="s.t().editor.limited" textWrap="true" class="switch-label"></Label>
+            <Switch col="1" [checked]="limited()" (checkedChange)="limited.set($any($event).value)"></Switch>
+          </GridLayout>
+
+          @if (limited()) {
+            <Label [text]="s.t().editor.occurrences" class="field-label"></Label>
+            <TextField [text]="occurrences()" keyboardType="integer" class="input"
+                       (textChange)="occurrences.set($any($event).value)"></TextField>
+          }
+        }
+
+        <Label [text]="error()" textWrap="true" class="error" [visibility]="error() ? 'visible' : 'collapse'"></Label>
+
+        @if (existing) {
+          <Button [text]="s.t().common.delete" class="danger" (tap)="remove()"></Button>
+        }
+      </StackLayout>
+    </ScrollView>
+    <GridLayout rows="auto" columns="*, *">
+      <Button col="0" [text]="s.t().common.cancel" class="secondary" (tap)="close()"></Button>
+      <Button col="1" [text]="s.t().common.save" class="primary apply" (tap)="save()"></Button>
+    </GridLayout>
+  </StackLayout>
+</GridLayout>

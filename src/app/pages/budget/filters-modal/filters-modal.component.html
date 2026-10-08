@@ -1,0 +1,29 @@
+<GridLayout [class]="themeClass" verticalAlignment="bottom" (loaded)="dockToBottom($any($event).object)">
+  <StackLayout class="modal">
+    <Label class="sheet-handle" horizontalAlignment="center"></Label>
+    <Label [text]="s.t().budget.filters" class="modal-title"></Label>
+    <TextField [hint]="s.t().budget.searchPlaceholder" [text]="filter().search" class="search"
+               (textChange)="patch({ search: $any($event).value })"></TextField>
+    <GridLayout rows="auto" columns="*, *, *">
+      <Button col="0" [text]="s.t().common.all" [class]="chip(filter().kind === null)" (tap)="patch({ kind: null })"></Button>
+      <Button col="1" [text]="s.t().common.income" [class]="chip(filter().kind === 'income')" (tap)="patch({ kind: 'income' })"></Button>
+      <Button col="2" [text]="s.t().common.expense" [class]="chip(filter().kind === 'expense')" (tap)="patch({ kind: 'expense' })"></Button>
+    </GridLayout>
+    <Label [text]="categoriesTitle()" class="field-label"></Label>
+    <ScrollView height="220" class="modal-list">
+      <StackLayout>
+        @for (c of rows(); track c.name) {
+          <GridLayout columns="auto, *, auto" rows="auto" [class]="c.selected ? 'pick-row pick-row-selected' : 'pick-row'" (tap)="toggle(c.name)">
+            <Label col="0" [text]="c.icon" class="mdi pick-icon"></Label>
+            <Label col="1" [text]="c.name" class="pick-name" verticalAlignment="middle"></Label>
+            <Label col="2" [text]="c.selected ? ui.checked : ui.unchecked" class="mdi pick-check" verticalAlignment="middle"></Label>
+          </GridLayout>
+        }
+      </StackLayout>
+    </ScrollView>
+    <GridLayout rows="auto" columns="*, *">
+      <Button col="0" [text]="s.t().budget.resetFilters" class="secondary" [isEnabled]="hasFilters()" (tap)="reset()"></Button>
+      <Button col="1" [text]="s.t().common.ok" class="primary apply" (tap)="close(filter())"></Button>
+    </GridLayout>
+  </StackLayout>
+</GridLayout>

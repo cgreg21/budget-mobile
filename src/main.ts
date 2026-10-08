@@ -10,8 +10,8 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { withInterceptorsFromDi } from '@angular/common/http';
 import { routes } from './app/app.routes';
 import { AppComponent } from './app/app.component';
-import { installCanvasPolyfills } from './app/core/canvas-polyfill';
 import { initDatabase } from './app/core/database';
+import { installCanvasPolyfills } from './app/shared/canvas-polyfill';
 
 installCanvasPolyfills();
 installCharts();

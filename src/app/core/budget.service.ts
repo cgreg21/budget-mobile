@@ -1,25 +1,26 @@
 ﻿import { Injectable, computed, signal } from '@angular/core';
+import {
+  categoryIcon, clampMonth, computeTotals, currentMonthKey, DEFAULT_BALANCE_THRESHOLDS,
+  defaultDateInMonth, FALLBACK_CATEGORY, isBalanceThresholds, isMonthKey, missingOccurrences,
+  monthFilePath, monthKeyOf, recurrenceFromTransaction, sortByDateDesc, sortRecurrences,
+  type BalanceThresholds, type Category, type MonthKey, type Recurrence, type RecurrenceSettings,
+  type Transaction, type TransactionInput,
+} from 'budget-lib';
 
-import { FALLBACK_CATEGORY, type Category } from '../domain/category';
-import { DEFAULT_BALANCE_THRESHOLDS, isBalanceThresholds, type BalanceThresholds } from '../domain/balance';
-import {
-  clampMonth, currentMonthKey, defaultDateInMonth, FIRST_MONTH, isMonthKey, LAST_MONTH,
-  monthKeyOf, shiftMonth, type MonthKey,
-} from '../domain/month';
-import {
-  missingOccurrences, recurrenceFromTransaction, sortRecurrences,
-  type Recurrence, type RecurrenceSettings,
-} from '../domain/recurrence';
-import {
-  computeTotals, sortByDateDesc, type Transaction, type TransactionInput,
-} from '../domain/transaction';
-import { persistCategories, persistMonth, persistRecurrences, snapshot } from './database';
+import { categoryGlyph } from '../shared/icons';
 import { notifyLocalChange } from './change-feed';
+import { persistCategories, persistMonth, persistRecurrences, snapshot } from './database';
 import { createId, readJson, writeJson } from './storage';
-import { monthFilePath } from '../domain/remote';
 
 // Thresholds are configuration, not data: they stay in the key/value settings.
 const THRESHOLDS_KEY = 'thresholds';
+
+/** Income and expenses of one month. */
+export interface MonthlyTotals {
+  month: MonthKey;
+  income: number;
+  expense: number;
+}
 
 /**
  * The budget as a history of months, stored in SQLite and mirrored in memory
@@ -39,19 +40,24 @@ export class BudgetService {
 
   readonly sorted = computed(() => sortByDateDesc(this.transactions()));
   readonly totals = computed(() => computeTotals(this.transactions()));
-  readonly hasOlderMonth = computed(() => this.selectedMonth() > FIRST_MONTH);
-  readonly hasNewerMonth = computed(() => this.selectedMonth() < LAST_MONTH);
 
   constructor() {
     this.openMonth(this.selectedMonth());
   }
 
-  get currentMonth(): MonthKey {
-    return currentMonthKey();
-  }
-
   get defaultTransactionDate(): string {
     return defaultDateInMonth(this.selectedMonth());
+  }
+
+  /** Name used when a new transaction has no category picked yet. */
+  get defaultCategory(): string {
+    const list = this.categories();
+    return list.find((c) => c.name === FALLBACK_CATEGORY)?.name ?? list[0].name;
+  }
+
+  /** The glyph of the icon of a category (the default icon for an unknown one). */
+  categoryGlyph(category: string): string {
+    return categoryGlyph(categoryIcon(this.categories(), category));
   }
 
   selectMonth(month: MonthKey): void {
@@ -59,14 +65,6 @@ export class BudgetService {
     const next = clampMonth(month);
     if (next === this.selectedMonth()) return;
     this.openMonth(next);
-  }
-
-  selectOlderMonth(): void {
-    this.selectMonth(shiftMonth(this.selectedMonth(), -1));
-  }
-
-  selectNewerMonth(): void {
-    this.selectMonth(shiftMonth(this.selectedMonth(), 1));
   }
 
   /** Files the transaction under the month of its date, and shows that month. */
@@ -138,26 +136,14 @@ export class BudgetService {
   }
 
   /** Totals for every month holding transactions, oldest first. */
-  monthlyTotals(): { month: MonthKey; income: number; expense: number }[] {
-    return [...this.months.keys()].sort().flatMap((month) => {
-      const list = this.months.get(month) ?? [];
-      if (list.length === 0) return [];
-      const { income, expense } = computeTotals(list);
-      return [{ month, income, expense }];
+  monthlyTotals(): MonthlyTotals[] {
+    return this.monthsWithData().map((month) => {
+      const { income, expense } = computeTotals(this.transactionsOf(month));
+      return { month, income, expense };
     });
   }
 
-  setThresholds(thresholds: BalanceThresholds): void {
-    this.replaceThresholds(thresholds);
-    notifyLocalChange('thresholds.json');
-  }
-
-  /*
-   * Replication API: applies data coming from the remote copy, without
-   * flagging it as a local change (so it is not sent back).
-   */
-
-  /** Months holding at least one transaction. */
+  /** Months holding at least one transaction, oldest first. */
   monthsWithData(): MonthKey[] {
     return [...this.months.keys()].filter((month) => (this.months.get(month)?.length ?? 0) > 0).sort();
   }
@@ -165,6 +151,29 @@ export class BudgetService {
   transactionsOf(month: MonthKey): Transaction[] {
     return this.months.get(month) ?? [];
   }
+
+  setThresholds(thresholds: BalanceThresholds): void {
+    this.replaceThresholds(thresholds);
+    notifyLocalChange('thresholds.json');
+  }
+
+  addCategory(name: string, icon: string): void {
+    this.saveCategories([...this.categories(), { name, icon }]);
+  }
+
+  updateCategory(name: string, patch: Partial<Category>): void {
+    this.saveCategories(this.categories().map((c) => (c.name === name ? { ...c, ...patch } : c)));
+  }
+
+  removeCategory(name: string): void {
+    const next = this.categories().filter((c) => c.name !== name);
+    if (next.length > 0) this.saveCategories(next);
+  }
+
+  /*
+   * Replication API: applies data coming from the remote copy, without
+   * flagging it as a local change (so it is not sent back).
+   */
 
   replaceMonth(month: MonthKey, list: Transaction[]): void {
     if (list.length === 0) this.months.delete(month);
@@ -190,28 +199,9 @@ export class BudgetService {
     this.applyRecurrences();
   }
 
-  addCategory(name: string, icon: string): void {
-    this.saveCategories([...this.categories(), { name, icon }]);
-  }
-
-  updateCategory(name: string, patch: Partial<Category>): void {
-    this.saveCategories(this.categories().map((c) => (c.name === name ? { ...c, ...patch } : c)));
-  }
-
-  removeCategory(name: string): void {
-    const next = this.categories().filter((c) => c.name !== name);
-    if (next.length > 0) this.saveCategories(next);
-  }
-
-  /** Name used when a new transaction has no category picked yet. */
-  get defaultCategory(): string {
-    const list = this.categories();
-    return list.find((c) => c.name === FALLBACK_CATEGORY)?.name ?? list[0].name;
-  }
-
   private openMonth(month: MonthKey): void {
     this.selectedMonth.set(month);
-    this.transactions.set(this.months.get(month) ?? []);
+    this.transactions.set(this.transactionsOf(month));
     this.applyRecurrences();
   }
 
@@ -226,7 +216,6 @@ export class BudgetService {
   private saveMonth(list: Transaction[]): void {
     const month = this.selectedMonth();
     this.replaceMonth(month, list);
-    this.transactions.set(list);
     notifyLocalChange(monthFilePath(month));
   }
 

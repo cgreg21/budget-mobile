@@ -1,17 +1,14 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { Application, ApplicationSettings, Connectivity } from '@nativescript/core';
+import {
+  DEFAULT_REMOTE_CONFIG, isBalanceThresholds, isCategoryList, isRecurrenceList,
+  isRemoteConfigComplete, isStoredRemoteConfig, isTransactionArray, mergeCategories, mergeMonth,
+  mergeRecurrences, mergeThresholds, monthFilePath, monthOfFilePath, normalizeRemoteConfig,
+  orderTransactions, REMOTE_SETTINGS_FILES, sameValue, sortRecurrences, withProvider,
+  type BalanceThresholds, type Category, type Recurrence, type RemoteConfig, type SyncStatus,
+  type Transaction,
+} from 'budget-lib';
 
-import { isBalanceThresholds, type BalanceThresholds } from '../domain/balance';
-import { isCategoryList, type Category } from '../domain/category';
-import {
-  DEFAULT_REMOTE_CONFIG, SETTINGS_FILES, isRemoteConfig, isRemoteConfigComplete, monthFilePath,
-  monthOfFilePath, normalizeRemoteConfig, withProvider, type RemoteConfig, type SyncStatus,
-} from '../domain/remote';
-import { isRecurrenceList, sortRecurrences, type Recurrence } from '../domain/recurrence';
-import {
-  mergeCategories, mergeMonth, mergeRecurrences, mergeThresholds, orderTransactions, sameValue,
-} from '../domain/sync-merge';
-import { isTransactionArray, type Transaction } from '../domain/transaction';
 import { BudgetService } from './budget.service';
 import { onLocalChange } from './change-feed';
 import { ICloudStore } from './icloud';
@@ -38,35 +35,32 @@ const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === 'string');
 
 /**
- * Keeps the budget in step with a remote directory — a WebDAV server (Infomaniak
- * kDrive, …) shared with the desktop application, or iCloud Drive on iOS. The
- * local database stays the working copy: edits
- * are always accepted, flagged as pending, and reconciled with the server by a
- * three-way merge as soon as it can be reached.
+ * Keeps the budget in step with a remote directory — a WebDAV server (Infomaniak kDrive, …)
+ * shared with the desktop application, or iCloud Drive on iOS. The local database stays the
+ * working copy: edits are always accepted, flagged as pending, and reconciled with the server
+ * by a three-way merge as soon as it can be reached.
  */
 @Injectable({ providedIn: 'root' })
 export class SyncService {
+  private readonly budget = inject(BudgetService);
   readonly config = signal<RemoteConfig>(
-    withProvider(readJson(CONFIG_KEY, isRemoteConfig, () => ({ ...DEFAULT_REMOTE_CONFIG }))),
+    withProvider(readJson(CONFIG_KEY, isStoredRemoteConfig, () => ({ ...DEFAULT_REMOTE_CONFIG }))),
   );
+  /** Files changed locally and not sent yet; kept across restarts. */
+  private readonly dirty = new Set<string>(readJson(DIRTY_KEY, isStringArray, () => []));
   private readonly state = signal<SyncStatus>({
-    state: 'disabled',
-    pending: 0,
+    state: this.config().enabled ? 'offline' : 'disabled',
+    pending: this.dirty.size,
     lastSyncedAt: ApplicationSettings.getString(LAST_SYNC_KEY, '') || undefined,
   });
   readonly status = this.state.asReadonly();
   readonly active = computed(() => this.config().enabled);
 
-  private dirty = new Set<string>(readJson(DIRTY_KEY, isStringArray, () => []));
   private running = false;
   private rerun = false;
   private pushTimer: ReturnType<typeof setTimeout> | undefined;
   private retryTimer: ReturnType<typeof setTimeout> | undefined;
   private started = false;
-
-  constructor(private readonly budget: BudgetService) {
-    this.state.update((s) => ({ ...s, state: this.config().enabled ? 'offline' : 'disabled', pending: this.dirty.size }));
-  }
 
   /** Starts listening to local changes, connectivity and app resume; then synchronises once. */
   start(): void {
@@ -117,10 +111,17 @@ export class SyncService {
   // ---- scheduling -------------------------------------------------------
 
   private markDirty(file: string): void {
-    this.dirty.add(file);
+    this.setDirty(file, true);
+    if (this.config().enabled) this.requestSync(PUSH_DELAY_MS);
+  }
+
+  /** Flags a file as changed locally and not sent yet, or clears that flag. */
+  private setDirty(file: string, dirty: boolean): void {
+    if (this.dirty.has(file) === dirty) return;
+    if (dirty) this.dirty.add(file);
+    else this.dirty.delete(file);
     writeJson(DIRTY_KEY, [...this.dirty]);
     this.setStatus({ pending: this.dirty.size });
-    if (this.config().enabled) this.requestSync(PUSH_DELAY_MS);
   }
 
   private requestSync(delay: number): void {
@@ -162,16 +163,10 @@ export class SyncService {
       this.rerun = true;
       return;
     }
-    let store: RemoteStore;
-    if (config.provider === 'icloud') {
-      store = new ICloudStore(config.remoteDir);
-    } else {
-      const password = readPassword();
-      if (password === '') {
-        this.setStatus({ state: 'error', message: 'Mot de passe manquant' });
-        return;
-      }
-      store = new WebDavClient(config, password);
+    const store = this.openStore(config);
+    if (!store) {
+      this.setStatus({ state: 'error', message: 'Mot de passe manquant' });
+      return;
     }
 
     this.running = true;
@@ -179,10 +174,9 @@ export class SyncService {
     this.setStatus({ state: 'connecting', message: undefined });
 
     try {
-      const client = store;
-      await client.probe();
+      await store.probe();
       this.setStatus({ state: 'syncing' });
-      const skipped = await this.syncAll(client);
+      const skipped = await this.syncAll(store);
 
       const lastSyncedAt = new Date().toISOString();
       ApplicationSettings.setString(LAST_SYNC_KEY, lastSyncedAt);
@@ -204,6 +198,13 @@ export class SyncService {
     }
   }
 
+  /** The store of the configured provider; `null` when the WebDAV password is missing. */
+  private openStore(config: RemoteConfig): RemoteStore | null {
+    if (config.provider === 'icloud') return new ICloudStore(config.remoteDir);
+    const password = readPassword();
+    return password === '' ? null : new WebDavClient(config, password);
+  }
+
   private failure(error: unknown): Partial<SyncStatus> {
     if (error instanceof RemoteRequestError) return { state: 'error', message: error.message };
     const message = error instanceof Error ? error.message : String(error);
@@ -211,22 +212,22 @@ export class SyncService {
   }
 
   /** Returns how many remote files were unreadable and left alone. */
-  private async syncAll(client: RemoteStore): Promise<number> {
-    await client.ensureDirectory('');
-    await client.ensureDirectory('months');
-    const rootEntries = (await client.list('')) ?? [];
-    const monthEntries = (await client.list('months')) ?? [];
+  private async syncAll(store: RemoteStore): Promise<number> {
+    await store.ensureDirectory('');
+    await store.ensureDirectory('months');
+    const rootEntries = (await store.list('')) ?? [];
+    const monthEntries = (await store.list('months')) ?? [];
 
     const remote = new Map<string, RemoteEntry>();
     for (const entry of rootEntries) {
-      if (!entry.isDirectory && (SETTINGS_FILES as readonly string[]).includes(entry.name)) remote.set(entry.name, entry);
+      if (!entry.isDirectory && (REMOTE_SETTINGS_FILES as readonly string[]).includes(entry.name)) remote.set(entry.name, entry);
     }
     for (const entry of monthEntries) {
       const file = `months/${entry.name}`;
       if (!entry.isDirectory && monthOfFilePath(file) !== null) remote.set(file, entry);
     }
 
-    const files = new Set<string>([...SETTINGS_FILES, ...remote.keys()]);
+    const files = new Set<string>([...REMOTE_SETTINGS_FILES, ...remote.keys()]);
     for (const month of this.budget.monthsWithData()) files.add(monthFilePath(month));
     for (const key of ApplicationSettings.getAllKeys()) {
       if (key.startsWith(BASE_PREFIX)) files.add(key.slice(BASE_PREFIX.length));
@@ -234,14 +235,14 @@ export class SyncService {
 
     let skipped = 0;
     for (const file of files) {
-      const synced = await this.syncFile(client, file, remote.get(file));
+      const synced = await this.syncFile(store, file, remote.get(file));
       if (!synced) skipped++;
     }
     return skipped;
   }
 
   /** Reconciles one file; `false` when the remote copy is unreadable and was left alone. */
-  private async syncFile(client: RemoteStore, file: string, entry: RemoteEntry | undefined): Promise<boolean> {
+  private async syncFile(store: RemoteStore, file: string, entry: RemoteEntry | undefined): Promise<boolean> {
     const baseText = ApplicationSettings.hasKey(BASE_PREFIX + file) ? ApplicationSettings.getString(BASE_PREFIX + file) : null;
     const baseEtag = ApplicationSettings.getString(ETAG_PREFIX + file, '') || undefined;
     const base = baseText === null ? undefined : this.parse(file, baseText) ?? undefined;
@@ -253,28 +254,25 @@ export class SyncService {
       ? baseText !== null
       : baseText === null || entry.etag === undefined || entry.etag !== baseEtag;
     if (etagChanged) {
-      const fetched = entry === undefined ? null : await client.read(file);
+      const fetched = entry === undefined ? null : await store.read(file);
       remoteText = fetched?.content ?? null;
       remoteEtag = fetched?.etag ?? entry?.etag;
     }
 
-    const parsedRemote = remoteText === null ? undefined : this.parse(file, remoteText);
-    if (parsedRemote === null) return false;
-    const remoteValue = parsedRemote;
+    const remoteValue = remoteText === null ? undefined : this.parse(file, remoteText);
+    if (remoteValue === null) return false;
 
     const localValue = this.localValue(file);
     const remoteChanged = !sameValue(base, remoteValue);
     const localChanged = !sameValue(base, localValue);
 
+    this.setDirty(file, false);
     if (!remoteChanged && !localChanged) {
       this.remember(file, baseText, remoteEtag);
-      this.clearDirty(file);
       return true;
     }
-
-    this.clearDirty(file);
     if (!remoteChanged) {
-      await this.push(client, file, localValue);
+      await this.push(store, file, localValue);
       return true;
     }
     if (!localChanged) {
@@ -286,37 +284,26 @@ export class SyncService {
     const merged = this.merge(file, base, localValue, remoteValue);
     if (!sameValue(merged, localValue)) this.applyLocal(file, merged);
     if (sameValue(merged, remoteValue)) this.remember(file, remoteText, remoteEtag);
-    else await this.push(client, file, merged);
+    else await this.push(store, file, merged);
     return true;
   }
 
   /** Sends `value` (or deletes the file when it is absent) and records what the server now holds. */
-  private async push(client: RemoteStore, file: string, value: FileValue | undefined): Promise<void> {
+  private async push(store: RemoteStore, file: string, value: FileValue | undefined): Promise<void> {
     try {
       if (value === undefined) {
-        await client.remove(file);
+        await store.remove(file);
         this.remember(file, null, undefined);
         return;
       }
       const text = JSON.stringify(value, null, 2);
-      const etag = await client.write(file, text);
+      const etag = await store.write(file, text);
       this.remember(file, text, etag);
     } catch (error) {
       // Keeps the change pending; the next run sends it again.
-      this.markPending(file);
+      this.setDirty(file, true);
       throw error;
     }
-  }
-
-  private markPending(file: string): void {
-    this.dirty.add(file);
-    writeJson(DIRTY_KEY, [...this.dirty]);
-  }
-
-  private clearDirty(file: string): void {
-    if (!this.dirty.delete(file)) return;
-    writeJson(DIRTY_KEY, [...this.dirty]);
-    this.setStatus({ pending: this.dirty.size });
   }
 
   private remember(file: string, text: string | null, etag: string | undefined): void {

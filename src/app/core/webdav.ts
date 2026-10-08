@@ -1,11 +1,9 @@
 import { Http } from '@nativescript/core';
+import { normalizeBaseUrl, remoteUrl, type RemoteConfig } from 'budget-lib';
 
-import { normalizeBaseUrl, remoteUrl, type RemoteConfig } from '../domain/remote';
 import {
   RemoteRequestError, RemoteUnreachableError, type RemoteEntry, type RemoteFile, type RemoteStore,
 } from './remote-store';
-
-export { RemoteRequestError, RemoteUnreachableError };
 
 interface DavResponse {
   status: number;

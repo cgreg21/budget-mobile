@@ -5,10 +5,10 @@ import { SlideInOnTopTransition } from 'nativescript-ui-sidedrawer';
 import { NativeScriptUISideDrawerModule } from 'nativescript-ui-sidedrawer/angular';
 
 import { DrawerService } from './core/drawer.service';
-import { pageTransition } from './core/page-transition';
 import { SettingsService } from './core/settings.service';
 import { SyncService } from './core/sync.service';
-import { UI_ICONS } from './domain/icons';
+import { UI_ICONS } from './shared/icons';
+import { pageTransition } from './shared/page-transition';
 
 const DRAWER_WIDTH = 280;
 
@@ -53,11 +53,7 @@ export class AppComponent {
   readonly syncText = computed(() => {
     const strings = this.s.t().sync;
     const { state, pending } = this.sync.status();
-    const labels = {
-      disabled: strings.stateDisabled, connecting: strings.stateConnecting, syncing: strings.stateSyncing,
-      online: strings.stateOnline, offline: strings.stateOffline, error: strings.stateError,
-    };
-    return pending > 0 ? `${labels[state]} \u00B7 ${strings.pending(pending)}` : labels[state];
+    return pending > 0 ? `${strings.states[state]} \u00B7 ${strings.pending(pending)}` : strings.states[state];
   });
 
   constructor() {

@@ -14,13 +14,42 @@ Application mobile NativeScript + Angular + TypeScript, portage de `budget-app` 
   ne garde que le bouton du menu et, sur l'accueil, celui des filtres.
 - Réglages : langue (fr/en), devise, formats de date et de montant, thème clair/sombre/système
 
-La couche `src/app/domain` est reprise telle quelle du projet GTK (logique pure) ; les transactions,
+La logique métier (transactions, mois, récurrences, fusion de synchronisation…) vient de la
+bibliothèque partagée [`budget-lib`](https://github.com/cgreg21/budget-lib), commune avec la version GTK ; les transactions,
 catégories et récurrences sont stockées dans une base SQLite (`budget.db`, `core/database.ts`), les
 anciennes données `ApplicationSettings` (`month:AAAA-MM`, catégories, récurrences) étant migrées au
 premier lancement. Si la bibliothèque SQLite native n'est pas disponible dans l'application en cours
 (client Preview, build antérieur à l'ajout du plugin), les données restent dans `ApplicationSettings`.
 La configuration (réglages généraux et seuils du solde) reste dans `ApplicationSettings`.
 Non porté : sauvegarde/CSV.
+
+## Organisation du code
+
+```text
+src/app/
+├── core/                     services (budget, réglages, base SQLite, synchronisation, traductions)
+├── shared/                   éléments utilisés par plusieurs pages
+│   ├── icons.ts              glyphes Material Design Icons (interface et icônes de catégorie)
+│   ├── bottom-sheet.ts       classe de base des feuilles du bas et fonction d'ouverture
+│   ├── tab-pager.ts          onglets glissants (Transactions, Statistiques)
+│   ├── page-transition.ts    sens de l'animation entre les pages
+│   ├── canvas-polyfill.ts    canvas iOS pour les graphiques
+│   ├── header/               en-tête (menu, filtres)
+│   ├── month-bar/            barre de navigation par mois
+│   └── month-picker-modal/   sélecteur de mois (feuille du bas)
+└── pages/                    une page par dossier, avec ses propres composants et sous-pages
+    ├── budget/               Transactions
+    │   ├── delete-transaction.ts  suppression (occurrence ou série d'une récurrence)
+    │   ├── editor-modal/     ajout / modification d'une transaction
+    │   └── filters-modal/    recherche et filtres
+    ├── categories/           Catégories
+    ├── stats/                Statistiques
+    │   └── category-pie/     camembert par catégorie
+    ├── history/              Historique
+    │   └── monthly-lines/    graphique en lignes
+    └── settings/             Réglages
+        └── recurrences/      liste des récurrences (ouverte depuis les réglages)
+```
 
 ## Design
 
@@ -47,7 +76,7 @@ l'application de bureau `budget-app` : `categories.json`, `thresholds.json`, `re
   nuage barré + *n* hors ligne avec *n* modifications en attente, nuage alerte erreur) et réconciliés dès que le serveur répond :
   au démarrage, au retour à l'application, au retour du réseau, après chaque modification
   (différée de 2,5 s) et toutes les 60 s tant que le serveur est injoignable.
-- **Fusion à trois voies** (`domain/sync-merge.ts`) entre la dernière version synchronisée, la
+- **Fusion à trois voies** (`sync-merge` de `budget-lib`) entre la dernière version synchronisée, la
   version locale et la version distante, par identifiant de transaction : un changement fait d'un
   seul côté est repris, en cas de modification des deux côtés la version locale l'emporte, une
   suppression ne l'emporte jamais sur une modification faite de l'autre côté. Les occurrences d'une
@@ -56,9 +85,9 @@ l'application de bureau `budget-app` : `categories.json`, `thresholds.json`, `re
   récurrences des deux côtés sont réunies.
 - Seuls les fichiers modifiés sont retéléchargés (comparaison des ETag).
 - Les icônes de catégorie sont stockées sous leur nom symbolique du bureau (`emoji-food-symbolic`,
-  `tabler:car`…, `domain/category-icons.ts`), donc `categories.json` est partagé tel quel. Elles sont
+  `tabler:car`…, `category-icons` de `budget-lib`), donc `categories.json` est partagé tel quel. Elles sont
   dessinées avec la police *Material Design Icons* (`src/fonts`, classe CSS `.mdi`, points de code dans
-  `domain/icons.ts`) ; les emoji enregistrés par les versions précédentes sont convertis au chargement.
+  `shared/icons.ts`) ; les emoji enregistrés par les versions précédentes sont convertis au chargement.
 - Comme les plugins SQLite, graphiques et coffre sécurisé sont natifs, il faut reconstruire
   l'application (`ns clean; ns run android|ios`).
 
@@ -85,7 +114,10 @@ Aucune adresse ni mot de passe : c'est le compte iCloud de l'appareil.
 ## Lancer
 
 ```sh
-npm install
+npm install             # récupère budget-lib depuis son dépôt Git
 npm i -g nativescript   # une seule fois
 ns run android          # ou ns run ios
 ```
+
+`budget-lib` est référencée par `git+https://github.com/cgreg21/budget-lib.git` : après une
+nouvelle version de la bibliothèque, lancer `npm update budget-lib`.

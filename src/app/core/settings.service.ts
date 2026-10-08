@@ -1,27 +1,35 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { Application } from '@nativescript/core';
-
 import {
-  DEFAULT_GENERAL_SETTINGS,
-  isGeneralSettings,
-  type AmountFormat,
-  type Currency,
-  type DateFormat,
-  type GeneralSettings,
-} from '../domain/general-settings';
-import type { MonthKey } from '../domain/month';
+  DEFAULT_GENERAL_SETTINGS, isGeneralSettings, type AmountFormat, type Currency, type DateFormat,
+  type GeneralSettings, type MonthKey, type TransactionKind,
+} from 'budget-lib';
+
 import { STRINGS, type Strings } from './i18n';
 import { readJson, writeJson } from './storage';
 
 const SETTINGS_KEY = 'general-settings';
 
+// The mobile design is dark first; the library defaults to the system theme.
+const DEFAULT_SETTINGS: GeneralSettings = { ...DEFAULT_GENERAL_SETTINGS, theme: 'dark' };
+
 const CURRENCY_SYMBOLS: Record<Currency, string> = { EUR: '\u20AC', USD: '$', GBP: '\u00A3', CHF: 'CHF' };
+
+/** Whether the light theme is on (see `SettingsService.applyTheme`). */
+export function isLightTheme(): boolean {
+  return Application.getRootView()?.cssClasses.has('ns-light') ?? false;
+}
+
+/** Reads an amount typed with a comma or a dot as decimal separator (NaN when it is not a number). */
+export function parseAmount(text: string): number {
+  return Number(text.replace(',', '.').trim());
+}
 
 /** General preferences, and every formatter that depends on them. */
 @Injectable({ providedIn: 'root' })
 export class SettingsService {
   readonly settings = signal<GeneralSettings>(
-    readJson(SETTINGS_KEY, isGeneralSettings, () => ({ ...DEFAULT_GENERAL_SETTINGS })),
+    readJson(SETTINGS_KEY, isGeneralSettings, () => ({ ...DEFAULT_SETTINGS })),
   );
   readonly t = computed<Strings>(() => STRINGS[this.settings().language]);
 
@@ -62,6 +70,11 @@ export class SettingsService {
     const number = `${value < 0 ? '-' : ''}${grouped}${style === 'space-comma' ? ',' : '.'}${decimals}`;
     const symbol = CURRENCY_SYMBOLS[currency];
     return style === 'space-comma' ? `${number}\u00A0${symbol}` : `${symbol}${number}`;
+  }
+
+  /** The amount preceded by the sign of its kind: + for an income, - for an expense. */
+  formatSigned(kind: TransactionKind, amount: number): string {
+    return `${kind === 'income' ? '+' : '-'}${this.formatAmount(amount)}`;
   }
 
   formatDate(iso: string): string {
