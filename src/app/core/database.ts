@@ -56,11 +56,15 @@ let db: SQLiteDatabase | null = null;
 let loaded: StoreSnapshot | null = null;
 // Writes are applied one after the other, in the order they were requested.
 let queue: Promise<unknown> = Promise.resolve();
+let writeFailure: unknown;
 
 function enqueue(job: (database: SQLiteDatabase) => Promise<unknown>): void {
   queue = queue
     .then(() => job(db as SQLiteDatabase))
-    .catch((error) => console.error('SQLite write failed', error));
+    .catch((error) => {
+      writeFailure = error;
+      console.error('SQLite write failed', error);
+    });
 }
 
 const insertTransaction = (database: SQLiteDatabase, month: MonthKey, t: Transaction): Promise<void> =>
@@ -221,4 +225,10 @@ export function persistRecurrences(list: readonly Recurrence[]): void {
     await database.execute('DELETE FROM recurrences');
     for (const recurrence of list) await insertRecurrence(database, recurrence);
   }));
+}
+
+/** The calendar baseline must not advance before local writes have reached disk. */
+export async function flushDatabase(): Promise<void> {
+  await queue;
+  if (writeFailure !== undefined) throw writeFailure;
 }

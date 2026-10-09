@@ -1,16 +1,15 @@
-import { Component, NO_ERRORS_SCHEMA, computed, inject, signal } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA, inject, signal } from '@angular/core';
 import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
 import { Dialogs } from '@nativescript/core';
 import {
   areThresholdsOrdered, type AmountFormat, type AppLanguage, type Currency, type DateFormat,
-  type RemoteProviderKind, type Theme,
+  type Theme,
 } from 'budget-lib';
 
 import { BudgetService } from '../../core/budget.service';
-import { isICloudSupported } from '../../core/icloud';
-import { isPasswordPersistent } from '../../core/secrets';
+import { CalendarSyncService } from '../../core/calendar-sync.service';
+import { isCalendarPasswordPersistent } from '../../core/secrets';
 import { parseAmount, SettingsService } from '../../core/settings.service';
-import { SyncService } from '../../core/sync.service';
 import { HeaderComponent } from '../../shared/header/header.component';
 import { pushTransition } from '../../shared/page-transition';
 
@@ -19,7 +18,6 @@ const CURRENCIES: Currency[] = ['EUR', 'USD', 'GBP', 'CHF'];
 const DATE_FORMATS: DateFormat[] = ['locale', 'dd-mm-yyyy', 'mm-dd-yyyy', 'yyyy-mm-dd'];
 const AMOUNT_FORMATS: AmountFormat[] = ['locale', 'space-comma', 'comma-dot'];
 const THEMES: Theme[] = ['system', 'light', 'dark'];
-const PROVIDERS: RemoteProviderKind[] = ['webdav', 'icloud'];
 
 @Component({
   selector: 'ns-settings',
@@ -30,29 +28,40 @@ const PROVIDERS: RemoteProviderKind[] = ['webdav', 'icloud'];
 export class SettingsPage {
   readonly b = inject(BudgetService);
   readonly s = inject(SettingsService);
-  readonly sync = inject(SyncService);
+  readonly calendar = inject(CalendarSyncService);
   private readonly router = inject(RouterExtensions);
 
   readonly low = signal(this.s.formatInput(this.b.thresholds().low));
   readonly medium = signal(this.s.formatInput(this.b.thresholds().medium));
   readonly high = signal(this.s.formatInput(this.b.thresholds().high));
   readonly message = signal('');
-  readonly syncEnabled = signal(this.sync.config().enabled);
-  readonly syncProvider = signal<RemoteProviderKind>(this.sync.config().provider);
-  readonly icloudSupported = isICloudSupported();
-  readonly syncUrl = signal(this.sync.config().baseUrl);
-  readonly syncUser = signal(this.sync.config().username);
-  readonly syncDir = signal(this.sync.config().remoteDir);
-  readonly syncPassword = signal('');
-  readonly passwordPersistent = isPasswordPersistent();
-  readonly syncStatusText = computed(() => {
-    const { sync: strings } = this.s.t();
-    const { state, pending, lastSyncedAt } = this.sync.status();
-    const parts = [strings.states[state]];
-    if (pending > 0) parts.push(strings.pending(pending));
-    parts.push(strings.lastSync(lastSyncedAt ? this.formatDateTime(lastSyncedAt) : strings.never));
-    return parts.join(' \u00B7 ');
-  });
+  readonly calendarEnabled = signal(this.calendar.config().enabled);
+  readonly calendarUrl = signal(this.calendar.config().calendarUrl);
+  readonly calendarUsername = signal(this.calendar.config().username);
+  readonly calendarPassword = signal('');
+  readonly passwordPersistent = isCalendarPasswordPersistent();
+
+  saveCalendar(synchronize = true): void {
+    this.calendar.configure({
+      enabled: this.calendarEnabled(), calendarUrl: this.calendarUrl(), username: this.calendarUsername(),
+    }, this.calendarPassword() || null, synchronize);
+    this.calendarPassword.set('');
+    const config = this.calendar.config();
+    this.calendarEnabled.set(config.enabled);
+    this.calendarUrl.set(config.calendarUrl);
+    this.calendarUsername.set(config.username);
+  }
+
+  testCalendar(): void {
+    this.saveCalendar(false);
+    void this.calendar.checkConnection();
+  }
+
+  syncCalendar(): void {
+    this.saveCalendar(false);
+    void this.calendar.syncNow();
+  }
+
 
   openRecurrences(): void {
     void this.router.navigate(['recurrences'], { transition: pushTransition });
@@ -60,38 +69,6 @@ export class SettingsPage {
 
   openBank(): void {
     void this.router.navigate(['bank'], { transition: pushTransition });
-  }
-
-  private formatDateTime(iso: string): string {
-    const date = new Date(iso);
-    const pad = (n: number): string => String(n).padStart(2, '0');
-    const day = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-    return `${this.s.formatDate(day)} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-  }
-
-  saveSync(): void {
-    this.sync.configure(
-      {
-        provider: this.syncProvider(), baseUrl: this.syncUrl(), username: this.syncUser(),
-        remoteDir: this.syncDir(), enabled: this.syncEnabled(),
-      },
-      this.syncPassword() === '' ? null : this.syncPassword(),
-    );
-    this.syncPassword.set('');
-    const config = this.sync.config();
-    this.syncUrl.set(config.baseUrl);
-    this.syncUser.set(config.username);
-    this.syncDir.set(config.remoteDir);
-    this.syncEnabled.set(config.enabled);
-  }
-
-  providerName(provider: RemoteProviderKind): string {
-    const { providerWebdav, providerIcloud } = this.s.t().sync;
-    return provider === 'icloud' ? providerIcloud : providerWebdav;
-  }
-
-  pickProvider(): Promise<void> {
-    return this.choose(PROVIDERS, (v) => this.providerName(v), (provider) => this.syncProvider.set(provider));
   }
 
   languageName(language: AppLanguage): string {

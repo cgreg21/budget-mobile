@@ -1,9 +1,9 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Application, isAndroid, Utils, type AndroidActivityNewIntentEventData } from '@nativescript/core';
 import {
-  bankImportStart, BankApiError, EnableBankingClient, isBankRedirect, isSessionExpired, normalizePrivateKey,
-  parseBankRedirect, toBudgetTransactions,
-  type Aspsp, type BankSession, type Transaction,
+  bankImportStart, BankApiError, defaultBankState, EnableBankingClient, isBankAutoImportDue, isBankDate, isBankRedirect,
+  isBankState, isSessionExpired, normalizePrivateKey, parseBankRedirect, rememberBankIds, toBudgetTransactions,
+  type Aspsp, type BankState, type Transaction,
 } from 'budget-lib';
 
 import { BudgetService } from '../budget.service';
@@ -13,30 +13,7 @@ import { createId, readJson, writeJson } from '../storage';
 import { nativeBankHttp, rsaSigner } from './platform';
 
 const STATE_KEY = 'bank-state';
-const AUTO_IMPORT_EVERY_MS = 6 * 3600 * 1000;
-const MAX_REMEMBERED_IDS = 5000;
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 export const DEFAULT_REDIRECT_URL = 'budgetmobile://bank';
-
-export interface BankConfig {
-  applicationId: string;
-  bankName: string;
-  bankCountry: string;
-  bankConsentSeconds: number;
-  redirectUrl: string;
-  /** Only transactions on or after this day (YYYY-MM-DD) are imported. */
-  importFrom: string;
-}
-
-interface StoredBank {
-  config: BankConfig;
-  session: BankSession | null;
-  /** The `state` of the authorisation in progress, checked when the bank sends the user back. */
-  pendingState: string;
-  lastImportAt: string;
-  /** Imported once: a transaction deleted from the budget is not brought back by the next import. */
-  importedIds: string[];
-}
 
 export interface BankNotice {
   tone: 'info' | 'error';
@@ -45,24 +22,7 @@ export interface BankNotice {
 
 const today = (): string => new Date().toISOString().slice(0, 10);
 
-const defaultStored = (): StoredBank => ({
-  config: {
-    applicationId: '', bankName: '', bankCountry: 'FR', bankConsentSeconds: 0,
-    redirectUrl: DEFAULT_REDIRECT_URL, importFrom: `${today().slice(0, 8)}01`,
-  },
-  session: null,
-  pendingState: '',
-  lastImportAt: '',
-  importedIds: [],
-});
-
-const isStoredBank = (value: unknown): value is StoredBank => {
-  const candidate = value as Partial<StoredBank> | null;
-  return typeof candidate === 'object' && candidate !== null
-    && typeof candidate.config?.applicationId === 'string'
-    && typeof candidate.pendingState === 'string'
-    && Array.isArray(candidate.importedIds);
-};
+const defaultStored = (): BankState => defaultBankState(today(), DEFAULT_REDIRECT_URL);
 
 const randomState = (): string => `${createId()}${createId()}`;
 
@@ -75,7 +35,7 @@ const randomState = (): string => `${createId()}${createId()}`;
 export class BankService {
   private readonly budget = inject(BudgetService);
   private readonly settings = inject(SettingsService);
-  private readonly stored = signal<StoredBank>(readJson(STATE_KEY, isStoredBank, defaultStored));
+  private readonly stored = signal<BankState>(readJson(STATE_KEY, isBankState, defaultStored));
   private started = false;
   private banks: Aspsp[] | null = null;
 
@@ -126,7 +86,7 @@ export class BankService {
   }
 
   saveSettings(redirectUrl: string, importFrom: string): boolean {
-    if (!DATE_PATTERN.test(importFrom.trim())) {
+    if (!isBankDate(importFrom)) {
       this.fail(this.settings.t().bank.invalidDate);
       return false;
     }
@@ -202,7 +162,7 @@ export class BankService {
     const known = new Set(this.stored().importedIds);
     const fresh = incoming.filter((tx) => !known.has(tx.id));
     const added = this.budget.importTransactions(fresh);
-    const importedIds = [...this.stored().importedIds, ...fresh.map((tx) => tx.id)].slice(-MAX_REMEMBERED_IDS);
+    const importedIds = rememberBankIds(this.stored().importedIds, fresh.map((tx) => tx.id));
     this.update({ lastImportAt: new Date().toISOString(), importedIds });
     this.notice.set({ tone: 'info', text: t.imported(added) });
   }
@@ -221,9 +181,7 @@ export class BankService {
   }
 
   private async autoImport(): Promise<void> {
-    const { lastImportAt, session } = this.stored();
-    if (session === null || this.expired() || this.busy()) return;
-    if (lastImportAt !== '' && Date.now() - Date.parse(lastImportAt) < AUTO_IMPORT_EVERY_MS) return;
+    if (this.busy() || !isBankAutoImportDue(this.stored(), this.expired(), Date.now())) return;
     await this.importNow(true);
   }
 
@@ -266,7 +224,7 @@ export class BankService {
     this.notice.set({ tone: 'error', text });
   }
 
-  private update(patch: Partial<StoredBank>): void {
+  private update(patch: Partial<BankState>): void {
     const next = { ...this.stored(), ...patch };
     this.stored.set(next);
     writeJson(STATE_KEY, next);

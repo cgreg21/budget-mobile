@@ -95,13 +95,17 @@ TextField, TextView { font-family: $font-regular; }
 .drawer-icon { font-size: 22; margin-right: 16; vertical-align: middle; color: $muted; }
 .drawer-label { font-size: 16; font-family: $font-medium; vertical-align: middle; }
 .drawer-item-active .drawer-icon, .drawer-item-active .drawer-label { color: $green; }
-.drawer-sync { margin: 8 16 16 16; padding: 12 14; background-color: $card; border-width: 1; border-color: $border; border-radius: $radius-md; }
-.drawer-sync-icon { font-size: 20; margin-right: 12; vertical-align: middle; color: $muted; }
-.drawer-sync-text { font-size: 14; font-family: $font-medium; vertical-align: middle; color: $muted; }
-.sync-status { margin-top: 8; font-size: 13; color: $muted; }
-.sync-offline { color: $yellow; }
-.sync-error { color: $red; }
-.sync-online { color: $green; }
+.drawer-calendar { margin: 8 16 16 16; padding: 12 14; background-color: $card; border-width: 1; border-color: $border; border-radius: $radius-md; }
+.drawer-calendar-icon { font-size: 20; margin-right: 12; vertical-align: middle; color: $muted; }
+.drawer-calendar-text { font-size: 14; font-family: $font-medium; vertical-align: middle; color: $muted; }
+.calendar-status { margin-top: 8; font-size: 13; color: $muted; }
+.calendar-offline { color: $yellow; }
+.calendar-error { color: $red; }
+.calendar-online { color: $green; }
+.calendar-syncing { color: $blue; }
+.bank-status { margin-top: 8; font-size: 13; color: $muted; }
+.bank-offline { color: $yellow; }
+.bank-online { color: $green; }
 
 // ---- tabs ----
 .tab-bar { background-color: $surface; border-top-width: 1; border-top-color: $border; height: 72; }
@@ -185,7 +189,7 @@ TextField, TextView { font-family: $font-regular; }
   .level-high { background-color: $light-green-tint; border-color: $light-green-border; .balance-value { color: $light-green; } }
   .stat-income { background-color: #e8fbf3; }
   .stat-expense { background-color: #fff0f0; }
-  .card-title, .row-sub, .field-label, .section-title, .empty-text, .sync-status { color: $light-muted; }
+  .card-title, .row-sub, .field-label, .section-title, .empty-text, .bank-status, .calendar-status { color: $light-muted; }
 
   .search, .input, .select, .icon-pick { background-color: $light-surface; border-color: $light-border; color: $light-text; }
   .chip { color: $light-muted; }
@@ -203,14 +207,14 @@ TextField, TextView { font-family: $font-regular; }
   &.modal-root { background-color: $light-surface; }
   .tabs-page { background-image: linear-gradient(to bottom, $light-bg 50%, $light-surface 50%); }
   .sheet-handle { background-color: $light-border; }
-  .drawer-icon, .drawer-sync-icon, .drawer-sync-text, .drawer-settings { color: $light-muted; }
+  .drawer-icon, .drawer-settings, .drawer-calendar-icon, .drawer-calendar-text { color: $light-muted; }
   .drawer-settings-active { background-color: $light-green-tint; color: $light-green; }
+  .drawer-calendar { background-color: $light-bg; border-color: $light-border; }
   .drawer-header { border-bottom-color: $light-border; }
   .drawer-logo { color: $light-green; background-color: $light-green-tint; }
   .drawer-item-active { background-color: $light-green-tint; }
   .drawer-item-active .drawer-bar { background-color: $light-green; }
   .drawer-item-active .drawer-icon, .drawer-item-active .drawer-label { color: $light-green; }
-  .drawer-sync { background-color: $light-bg; border-color: $light-border; }
 
   .tab-icon { color: $light-muted; }
   .tab-active .tab-icon { color: $light-green; }
@@ -225,8 +229,12 @@ TextField, TextView { font-family: $font-regular; }
   .income-bar { background-color: $light-green-bar; }
   .expense { color: $light-red; }
   .expense-bar { background-color: $light-red; }
-  .sync-offline { color: $light-amber; }
-  .sync-error, .error { color: $light-red; }
-  .sync-online { color: $light-green; }
+  .calendar-offline { color: $light-amber; }
+  .calendar-error { color: $light-red; }
+  .calendar-online { color: $light-green; }
+  .calendar-syncing { color: $light-blue; }
+  .bank-offline { color: $light-amber; }
+  .error { color: $light-red; }
+  .bank-online { color: $light-green; }
   .row-icon { color: $light-green; background-color: $light-green-tint; }
 }

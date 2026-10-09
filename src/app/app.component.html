@@ -18,11 +18,10 @@
         }
       </StackLayout>
     </ScrollView>
-
-    @if (sync.active()) {
-      <GridLayout row="2" columns="auto, *" rows="auto" class="drawer-sync" nsPress (tap)="onSyncTap()">
-        <Label col="0" [text]="syncIcon()" [class]="'mdi drawer-sync-icon sync-' + sync.status().state"></Label>
-        <Label col="1" [text]="syncText()" textWrap="true" class="drawer-sync-text"></Label>
+    @if (calendar.active()) {
+      <GridLayout row="2" columns="auto, *" class="drawer-calendar" nsPress (tap)="onCalendarTap()">
+        <Label col="0" [text]="calendarIcon" [class]="'mdi drawer-calendar-icon calendar-' + calendar.status().state"></Label>
+        <Label col="1" [text]="calendar.statusText()" textWrap="true" [class]="'drawer-calendar-text calendar-' + calendar.status().state"></Label>
       </GridLayout>
     }
   </GridLayout>

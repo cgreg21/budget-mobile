@@ -1,14 +1,14 @@
 ﻿import { Injectable, computed, signal } from '@angular/core';
+import { Subject } from 'rxjs';
 import {
-  categoryIcon, clampMonth, computeTotals, currentMonthKey, DEFAULT_BALANCE_THRESHOLDS,
+  categoryIcon, clampMonth, computeTotals, currentMonthKey, DEFAULT_BALANCE_THRESHOLDS, DEFAULT_CATEGORY_ICON,
   defaultDateInMonth, FALLBACK_CATEGORY, isBalanceThresholds, isMonthKey, missingOccurrences,
-  monthFilePath, monthKeyOf, recurrenceFromTransaction, sortByDateDesc, sortRecurrences,
+  monthKeyOf, recurrenceFromTransaction, sortByDateDesc, sortRecurrences, transactionHash,
   type BalanceThresholds, type Category, type MonthKey, type Recurrence, type RecurrenceSettings,
   type Transaction, type TransactionInput,
 } from 'budget-lib';
 
 import { categoryGlyph } from '../shared/icons';
-import { notifyLocalChange } from './change-feed';
 import { persistCategories, persistMonth, persistRecurrences, snapshot } from './database';
 import { createId, readJson, writeJson } from './storage';
 
@@ -29,6 +29,11 @@ export interface MonthlyTotals {
  */
 @Injectable({ providedIn: 'root' })
 export class BudgetService {
+  private readonly transactionChanges = new Subject<void>();
+  readonly transactionsChanged = this.transactionChanges.asObservable();
+  private readonly skippedOccurrences = new Set<string>(
+    readJson('recurrence-skipped', (v): v is string[] => Array.isArray(v) && v.every((s) => typeof s === 'string'), () => []),
+  );
   readonly selectedMonth = signal<MonthKey>(currentMonthKey());
   readonly transactions = signal<Transaction[]>([]);
   private readonly months = snapshot().months;
@@ -89,6 +94,8 @@ export class BudgetService {
     const month = this.selectedMonth();
     if (monthKeyOf(input.date) !== month) {
       // The date left the month on screen: the transaction moves with it.
+      const previous = this.transactions().find((t) => t.id === id);
+      if (previous) this.skipOccurrence(previous);
       this.saveMonth(this.transactions().filter((t) => t.id !== id));
       this.selectMonth(monthKeyOf(input.date));
       this.saveMonth([...this.transactions(), { id, ...input }]);
@@ -122,6 +129,8 @@ export class BudgetService {
   }
 
   remove(id: string): void {
+    const transaction = this.transactions().find((t) => t.id === id);
+    if (transaction) this.skipOccurrence(transaction);
     this.saveMonth(this.transactions().filter((t) => t.id !== id));
   }
 
@@ -153,8 +162,8 @@ export class BudgetService {
   }
 
   setThresholds(thresholds: BalanceThresholds): void {
-    this.replaceThresholds(thresholds);
-    notifyLocalChange('thresholds.json');
+    this.thresholds.set(thresholds);
+    writeJson(THRESHOLDS_KEY, thresholds);
   }
 
   addCategory(name: string, icon: string): void {
@@ -170,16 +179,12 @@ export class BudgetService {
     if (next.length > 0) this.saveCategories(next);
   }
 
-  /*
-   * Replication API: applies data coming from the remote copy, without
-   * flagging it as a local change (so it is not sent back).
-   */
-
-  replaceMonth(month: MonthKey, list: Transaction[]): void {
+  private replaceMonth(month: MonthKey, list: Transaction[], notify = true): void {
     if (list.length === 0) this.months.delete(month);
     else this.months.set(month, list);
     persistMonth(month, list);
     if (month === this.selectedMonth()) this.transactions.set(list);
+    if (notify) this.transactionChanges.next();
   }
 
   /** Adds transactions coming from outside (bank), in whatever month they belong to, ignoring the ids already present. Returns how many were added. */
@@ -197,23 +202,67 @@ export class BudgetService {
       const fresh = incoming.filter((tx) => !known.has(tx.id));
       if (fresh.length === 0) continue;
       this.replaceMonth(month, sortByDateDesc([...current, ...fresh]));
-      notifyLocalChange(monthFilePath(month));
       added += fresh.length;
     }
     return added;
   }
 
-  replaceThresholds(thresholds: BalanceThresholds): void {
-    this.thresholds.set(thresholds);
-    writeJson(THRESHOLDS_KEY, thresholds);
+  allTransactions(): Transaction[] {
+    return [...this.months.values()].flat();
   }
 
-  replaceCategories(list: Category[]): void {
+  /** Apply only to ids unchanged since the network request; newer edits are synced next time. */
+  applyCalendarChanges(upsert: Transaction[], remove: string[], sent: readonly Transaction[]): void {
+    const original = new Map(sent.map((t) => [t.id, transactionHash(t)]));
+    const current = new Map(this.allTransactions().map((t) => [t.id, t]));
+    const unchanged = (id: string): boolean => {
+      const transaction = current.get(id);
+      return (transaction ? transactionHash(transaction) : undefined) === original.get(id);
+    };
+    const incoming = upsert.filter((t) => unchanged(t.id));
+    const deleted = remove.filter(unchanged);
+    const affected = new Set<MonthKey>();
+    for (const id of [...deleted, ...incoming.map((t) => t.id)]) {
+      const previous = current.get(id);
+      if (previous) {
+        affected.add(monthKeyOf(previous.date));
+        if (deleted.includes(id) || incoming.some((t) => t.id === id && (monthKeyOf(t.date) !== monthKeyOf(previous.date) || t.recurrenceId !== previous.recurrenceId))) {
+          this.skipOccurrence(previous);
+        }
+        current.delete(id);
+      }
+    }
+    const categories = [...this.categories()];
+    for (const transaction of incoming) {
+      // Keep the recurrence stamp, but never import a recurrence template.
+      current.set(transaction.id, transaction);
+      affected.add(monthKeyOf(transaction.date));
+      if (!categories.some((c) => c.name === transaction.category)) {
+        categories.push({ name: transaction.category, icon: DEFAULT_CATEGORY_ICON });
+      }
+    }
+    if (categories.length !== this.categories().length) this.saveCategories(categories);
+    for (const month of affected) {
+      this.replaceMonth(month, sortByDateDesc([...current.values()].filter((t) => monthKeyOf(t.date) === month)), false);
+    }
+  }
+
+  private skipOccurrence(transaction: Transaction): void {
+    if (transaction.recurrenceId === undefined) return;
+    this.skippedOccurrences.add(this.occurrenceStamp(transaction.recurrenceId, monthKeyOf(transaction.date)));
+    writeJson('recurrence-skipped', [...this.skippedOccurrences]);
+  }
+
+  private occurrenceStamp(id: string, month: MonthKey): string {
+    return JSON.stringify([id, month]);
+  }
+
+  private saveCategories(list: Category[]): void {
     persistCategories(list);
     this.categories.set(list);
   }
 
-  replaceRecurrences(list: Recurrence[]): void {
+  private saveRecurrences(list: Recurrence[]): void {
     const sorted = sortRecurrences(list);
     persistRecurrences(sorted);
     this.recurrences.set(sorted);
@@ -229,7 +278,8 @@ export class BudgetService {
   /** Writes the occurrences the selected month still lacks; stamped ones are left alone. */
   private applyRecurrences(): void {
     const month = this.selectedMonth();
-    const missing = missingOccurrences(this.recurrences(), month, this.transactions());
+    const missing = missingOccurrences(this.recurrences(), month, this.transactions())
+      .filter((t) => t.recurrenceId === undefined || !this.skippedOccurrences.has(this.occurrenceStamp(t.recurrenceId, month)));
     if (missing.length === 0) return;
     this.saveMonth([...this.transactions(), ...missing.map((input) => ({ id: createId(), ...input }))]);
   }
@@ -237,16 +287,5 @@ export class BudgetService {
   private saveMonth(list: Transaction[]): void {
     const month = this.selectedMonth();
     this.replaceMonth(month, list);
-    notifyLocalChange(monthFilePath(month));
-  }
-
-  private saveRecurrences(list: Recurrence[]): void {
-    this.replaceRecurrences(list);
-    notifyLocalChange('recurrences.json');
-  }
-
-  private saveCategories(list: Category[]): void {
-    this.replaceCategories(list);
-    notifyLocalChange('categories.json');
   }
 }

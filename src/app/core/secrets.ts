@@ -1,6 +1,6 @@
 import { SecureStorage } from '@nativescript/secure-storage';
 
-const PASSWORD_KEY = 'remote-password';
+const CALENDAR_PASSWORD_KEY = 'calendar-password';
 const BANK_KEY_KEY = 'bank-private-key';
 
 let storage: SecureStorage | null | undefined;
@@ -18,9 +18,6 @@ function secure(): SecureStorage | null {
   }
   return storage;
 }
-
-/** Whether the secrets survive an app restart. */
-export const isPasswordPersistent = (): boolean => secure() !== null;
 
 function readSecret(key: string): string {
   const store = secure();
@@ -45,8 +42,9 @@ function writeSecret(key: string, value: string): void {
   }
 }
 
-export const readPassword = (): string => readSecret(PASSWORD_KEY);
-export const writePassword = (password: string): void => writeSecret(PASSWORD_KEY, password);
-
 export const readBankKey = (): string => readSecret(BANK_KEY_KEY);
 export const writeBankKey = (privateKey: string): void => writeSecret(BANK_KEY_KEY, privateKey);
+
+export const readCalendarPassword = (): string => readSecret(CALENDAR_PASSWORD_KEY);
+export const writeCalendarPassword = (password: string): void => writeSecret(CALENDAR_PASSWORD_KEY, password);
+export const isCalendarPasswordPersistent = (): boolean => secure() !== null;

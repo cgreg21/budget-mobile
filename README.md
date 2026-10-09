@@ -10,24 +10,26 @@ Application mobile NativeScript + Angular + TypeScript, portage de `budget-app` 
 - Catégories avec icônes symboliques, seuils du solde, statistiques par catégorie et historique mensuel
 - Menu latéral (`nativescript-ui-sidedrawer`, comme le modèle *drawer-navigation* officiel, ouvert par le
   bouton ☰ ou un balayage depuis le bord gauche, fermé par un balayage vers la gauche) : Transactions, Catégories (création, modification, suppression, choix d'icône),
-  Statistiques, Historique et Réglages ; l'état de la synchronisation kDrive y est affiché. L'en-tête
+  Statistiques, Historique et Réglages. L'en-tête
   ne garde que le bouton du menu et, sur l'accueil, celui des filtres.
 - Réglages : langue (fr/en), devise, formats de date et de montant, thème clair/sombre/système
 
-La logique métier (transactions, mois, récurrences, fusion de synchronisation…) vient de la
+La logique métier (transactions, mois, récurrences) vient de la
 bibliothèque partagée [`budget-lib`](https://github.com/cgreg21/budget-lib), commune avec la version GTK ; les transactions,
 catégories et récurrences sont stockées dans une base SQLite (`budget.db`, `core/database.ts`), les
 anciennes données `ApplicationSettings` (`month:AAAA-MM`, catégories, récurrences) étant migrées au
 premier lancement. Si la bibliothèque SQLite native n'est pas disponible dans l'application en cours
 (client Preview, build antérieur à l'ajout du plugin), les données restent dans `ApplicationSettings`.
 La configuration (réglages généraux et seuils du solde) reste dans `ApplicationSettings`.
+Les données restent locales par défaut ; la synchronisation optionnelle CalDAV échange les
+transactions avec un calendrier en ligne. SQLite reste la copie de travail hors connexion.
 Non porté : sauvegarde/CSV.
 
 ## Organisation du code
 
 ```text
 src/app/
-├── core/                     services (budget, réglages, base SQLite, synchronisation, traductions)
+├── core/                     services (budget, réglages, base SQLite, calendrier CalDAV, import bancaire, traductions)
 ├── shared/                   éléments utilisés par plusieurs pages
 │   ├── icons.ts              glyphes Material Design Icons (interface et icônes de catégorie)
 │   ├── bottom-sheet.ts       classe de base des feuilles du bas et fonction d'ouverture
@@ -63,55 +65,31 @@ se choisissent avec `font-family`, pas `font-weight`). Toutes les couleurs sont 
 thème clair (réglable) ne redéfinit que les surfaces et les textes. Les camemberts utilisent la même palette.
 Il faut reconstruire l'application pour embarquer la police.
 
-## Synchronisation kDrive (WebDAV)
+## Calendrier en ligne (CalDAV)
 
-Réglages → *Synchronisation* : adresse WebDAV du kDrive Infomaniak (ex.
-`https://<id>.connect.kdrive.infomaniak.com`), identifiant, mot de passe (ou mot de passe
-d'application) et dossier distant (`budget-app` par défaut). L'organisation des fichiers est celle de
-l'application de bureau `budget-app` : `categories.json`, `thresholds.json`, `recurrences.json` et
-`months/AAAA-MM.json`, afin de partager le même dossier.
+Réglages → *Calendrier en ligne* : activer la synchronisation, saisir l'adresse complète du
+calendrier (par exemple `https://cloud.example.com/remote.php/dav/calendars/user/budget`), l'identifiant et le mot de passe (ou mot de passe d'application).
+*Tester la connexion* vérifie l'accès sans échanger de transactions ; *Enregistrer* et
+*Synchroniser maintenant* lancent un échange si la synchronisation est activée.
 
-- Le mot de passe est stocké dans le coffre sécurisé du système (`@nativescript/secure-storage`),
-  jamais dans les réglages ; sans ce plugin natif il n'est gardé que pour la session.
-- **Mode hors ligne** : la base SQLite reste la copie de travail, on peut toujours modifier. Les
-  changements sont mémorisés (indicateur nuage dans le menu latéral : nuage coché à jour, flèches en cours,
-  nuage barré + *n* hors ligne avec *n* modifications en attente, nuage alerte erreur) et réconciliés dès que le serveur répond :
-  au démarrage, au retour à l'application, au retour du réseau, après chaque modification
-  (différée de 2,5 s) et toutes les 60 s tant que le serveur est injoignable.
-- **Fusion à trois voies** (`sync-merge` de `budget-lib`) entre la dernière version synchronisée, la
-  version locale et la version distante, par identifiant de transaction : un changement fait d'un
-  seul côté est repris, en cas de modification des deux côtés la version locale l'emporte, une
-  suppression ne l'emporte jamais sur une modification faite de l'autre côté. Les occurrences d'une
-  récurrence générées sur les deux appareils sont dédoublonnées. À la première synchronisation avec un
-  serveur déjà rempli, les catégories et seuils du serveur font référence ; les transactions et
-  récurrences des deux côtés sont réunies.
-- Seuls les fichiers modifiés sont retéléchargés (comparaison des ETag).
-- Les icônes de catégorie sont stockées sous leur nom symbolique du bureau (`emoji-food-symbolic`,
-  `tabler:car`…, `category-icons` de `budget-lib`), donc `categories.json` est partagé tel quel. Elles sont
-  dessinées avec la police *Material Design Icons* (`src/fonts`, classe CSS `.mdi`, points de code dans
-  `shared/icons.ts`) ; les emoji enregistrés par les versions précédentes sont convertis au chargement.
-- Comme les plugins SQLite, graphiques et coffre sécurisé sont natifs, il faut reconstruire
-  l'application (`ns clean; ns run android|ios`).
-
-## Stockage iCloud Drive (iOS)
-
-Réglages → *Synchronisation* → *Stockage* → **iCloud Drive** (choix proposé uniquement sur iOS).
-Le moteur de synchronisation est le même que pour kDrive (fusion à trois voies, mode hors ligne,
-même organisation de fichiers) ; seul le support change : `core/icloud.ts` lit et écrit les fichiers
-dans `<conteneur iCloud>/Documents/<dossier distant>` et iOS les propage aux autres appareils.
-Aucune adresse ni mot de passe : c'est le compte iCloud de l'appareil.
-
-- Les fichiers apparaissent dans l'app *Fichiers* → iCloud Drive → *Budget* (`NSUbiquitousContainers`
-  dans `Info.plist`).
-- Les fichiers créés par un autre appareil sont d'abord des « espaces réservés » (`.nom.json.icloud`) :
-  la synchronisation en déclenche le téléchargement et réessaie si besoin.
-- Prérequis : compte Apple Developer payant, capacité **iCloud → iCloud Documents** activée sur
-  l'App ID `org.nativescript.budgetmobile` avec le conteneur `iCloud.org.nativescript.budgetmobile`
-  (déclaré dans `App_Resources/iOS/app.entitlements`) ; si l'identifiant de l'application change,
-  adapter ce fichier et `Info.plist`. Sans iCloud disponible, la synchronisation passe en erreur
-  avec un message explicite.
-- L'application de bureau (GTK) ne lit pas iCloud : pour partager avec elle, utiliser kDrive.
-- Changer de support (kDrive ↔ iCloud) repart d'une première synchronisation.
+- Les transactions de **tous les mois** deviennent des événements sur toute la journée,
+  partagés entre bureau, mobile et web via le même calendrier. Utiliser un calendrier dédié.
+  Les événements non Budget sont ignorés ; le calendrier doit déjà exister.
+- La configuration, la dernière synchronisation et la référence de comparaison sont locales
+  (ApplicationSettings). Le mot de passe est uniquement dans le stockage sécurisé de l'appareil ;
+  si le plugin natif manque, il reste en mémoire pour la session et doit être ressaisi au redémarrage.
+- Synchronisation au lancement, environ deux secondes après une modification (y compris les imports
+  bancaires), au retour du réseau ou de l'application, et manuellement. Les échanges sont sérialisés ;
+  une modification faite pendant un échange déclenche un autre passage sans bloquer la saisie locale.
+  L'état est affiché dans les réglages et le menu latéral.
+- Les changements et suppressions sont propagés ; en cas de modifications concurrentes, le calendrier
+  fait référence. Les refus ETag sont signalés pour réessayer, jamais écrasés aveuglément.
+  Les nouvelles catégories reçoivent l'icône par défaut. Les modèles de récurrence et les
+  réglages ne sont pas synchronisés : seules les occurrences, avec leur empreinte de récurrence,
+  deviennent des événements simples. Une occurrence supprimée n'est pas recréée localement.
+- Transport natif `@nativescript/core Http.request` (PROPFIND, REPORT, PUT, DELETE), corps texte,
+  en-têtes de réponse normalisés en minuscules ; pas de contrainte CORS sur mobile.
+  Utiliser HTTPS, car l'authentification Basic n'est pas chiffrée sur HTTP.
 
 ## Import bancaire (Enable Banking)
 
@@ -120,7 +98,7 @@ Réglages → Banque importe les opérations d'un compte (visé : Crédit Mutuel
 1. Sur enablebanking.com/cp, créer une application en mode production restreint, lier son compte,
    déclarer l'adresse de retour (`budgetmobile://bank` par défaut) et télécharger la clé privée (PEM).
 2. Dans l'app : saisir l'identifiant de l'application et coller la clé (stockée dans le stockage sécurisé
-   de l'appareil, jamais dans les fichiers synchronisés), choisir la banque puis « Connecter la banque ».
+   de l'appareil), choisir la banque puis « Connecter la banque ».
 3. Après l'autorisation, la banque renvoie vers l'app (schéma `budgetmobile://`, déclaré dans
    `Info.plist` et `AndroidManifest.xml`). Sinon, coller l'adresse affichée dans le champ prévu.
 
@@ -128,17 +106,17 @@ Réglages → Banque importe les opérations d'un compte (visé : Crédit Mutuel
   conversion en transactions (catégorie devinée, identifiants déterministes), lecture de l'adresse de retour.
   `core/bank/platform.ts` fournit le transport HTTP NativeScript et la signature RSA (jsrsasign) ;
   `core/bank/bank.service.ts` gère la connexion, l'import et l'import automatique au plus toutes les 6 h.
-- Les identifiants étant déterministes, la synchro WebDAV entre appareils ne crée pas de doublons ; une
-  transaction supprimée n'est pas réimportée.
+- Les identifiants déterministes évitent les doublons lors des imports ; une transaction supprimée
+  n'est pas réimportée.
 - L'accès doit être renouvelé environ tous les 90 jours ; la banque limite les imports automatiques (~4/jour).
 
 ## Lancer
 
 ```sh
-npm install             # récupère budget-lib depuis son dépôt Git
+npm install             # installe les dépendances et lie budget-lib localement
 npm i -g nativescript   # une seule fois
 ns run android          # ou ns run ios
 ```
 
-`budget-lib` est référencée par `git+https://github.com/cgreg21/budget-lib.git` : après une
-nouvelle version de la bibliothèque, lancer `npm update budget-lib`.
+`budget-lib` est référencée par `../budget-lib` : elle doit être disponible dans le
+workspace, à côté de `budget-mobile`.

@@ -5,9 +5,9 @@ import { SlideInOnTopTransition } from 'nativescript-ui-sidedrawer';
 import { NativeScriptUISideDrawerModule } from 'nativescript-ui-sidedrawer/angular';
 
 import { BankService } from './core/bank/bank.service';
+import { CalendarSyncService } from './core/calendar-sync.service';
 import { DrawerService } from './core/drawer.service';
 import { SettingsService } from './core/settings.service';
-import { SyncService } from './core/sync.service';
 import { UI_ICONS } from './shared/icons';
 import { PressDirective } from './shared/motion';
 import { pageTransition } from './shared/page-transition';
@@ -26,7 +26,8 @@ export class AppComponent {
   readonly logo = UI_ICONS.logo;
   readonly settingsIcon = UI_ICONS.settings;
   readonly s = inject(SettingsService);
-  readonly sync = inject(SyncService);
+  readonly calendar = inject(CalendarSyncService);
+  readonly calendarIcon = UI_ICONS.calendar;
   private readonly bank = inject(BankService);
   private readonly drawer = inject(DrawerService);
   private readonly nav = inject(RouterExtensions);
@@ -44,39 +45,22 @@ export class AppComponent {
     ];
   });
 
-  readonly syncIcon = computed(() => {
-    switch (this.sync.status().state) {
-      case 'connecting':
-      case 'syncing': return UI_ICONS.syncing;
-      case 'offline': return UI_ICONS.cloudOffline;
-      case 'error': return UI_ICONS.cloudError;
-      default: return UI_ICONS.cloudOk;
-    }
-  });
-
-  readonly syncText = computed(() => {
-    const strings = this.s.t().sync;
-    const { state, pending } = this.sync.status();
-    return pending > 0 ? `${strings.states[state]} \u00B7 ${strings.pending(pending)}` : strings.states[state];
-  });
-
   constructor() {
-    this.sync.start();
+    this.calendar.start();
     this.bank.start();
     inject(Router).events.subscribe((event) => {
       if (event instanceof NavigationEnd) this.url.set(event.urlAfterRedirects);
     });
   }
 
+  onCalendarTap(): void {
+    if (this.calendar.status().state === 'error') this.go('/settings');
+    else void this.calendar.syncNow();
+  }
+
   go(url: string): void {
     this.drawer.close();
     if (url === this.url()) return;
     void this.nav.navigate([url], { clearHistory: true, transition: pageTransition(this.url(), url) });
-  }
-
-  /** Tapping the sync row retries the synchronisation, or opens the settings to fix an error. */
-  onSyncTap(): void {
-    if (this.sync.status().state === 'error') this.go('/settings');
-    else void this.sync.syncNow();
   }
 }

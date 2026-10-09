@@ -34,34 +34,24 @@
         <Label col="1" text="&#x203A;" class="setting-value"></Label>
       </GridLayout>
 
-      <Label [text]="s.t().sync.title" class="section-title"></Label>
-      <Label [text]="syncProvider() === 'icloud' ? s.t().sync.icloudHelp : s.t().sync.help" textWrap="true" class="row-sub"></Label>
-      @if (icloudSupported) {
-        <GridLayout columns="*, auto" class="setting" (tap)="pickProvider()">
-          <Label col="0" [text]="s.t().sync.provider"></Label>
-          <Label col="1" [text]="providerName(syncProvider())" class="setting-value"></Label>
-        </GridLayout>
-      }
-      <GridLayout columns="*, auto" rows="auto" class="setting">
-        <Label col="0" [text]="s.t().sync.enable"></Label>
-        <Switch col="1" [checked]="syncEnabled()" (checkedChange)="syncEnabled.set($any($event).value)"></Switch>
+      <Label [text]="s.t().calendar.title" class="section-title"></Label>
+      <Label [text]="s.t().calendar.help" textWrap="true" class="row-sub"></Label>
+      <GridLayout columns="*, auto" class="setting">
+        <Label col="0" [text]="s.t().calendar.enable"></Label>
+        <Switch col="1" [checked]="calendarEnabled()" (checkedChange)="calendarEnabled.set($any($event).value)"></Switch>
       </GridLayout>
-      @if (syncProvider() === 'webdav') {
-        <Label [text]="s.t().sync.server" class="field-label"></Label>
-        <TextField [text]="syncUrl()" hint="https://xxxxx.connect.kdrive.infomaniak.com" keyboardType="url" autocorrect="false" autocapitalizationType="none" class="input" (textChange)="syncUrl.set($any($event).value)"></TextField>
-        <Label [text]="s.t().sync.username" class="field-label"></Label>
-        <TextField [text]="syncUser()" keyboardType="email" autocorrect="false" autocapitalizationType="none" class="input" (textChange)="syncUser.set($any($event).value)"></TextField>
-        <Label [text]="s.t().sync.password" class="field-label"></Label>
-        <TextField [text]="syncPassword()" [hint]="sync.hasPassword() ? s.t().sync.passwordKept : ''" secure="true" autocorrect="false" autocapitalizationType="none" class="input" (textChange)="syncPassword.set($any($event).value)"></TextField>
-      }
-      <Label [text]="s.t().sync.remoteDir" class="field-label"></Label>
-      <TextField [text]="syncDir()" autocorrect="false" autocapitalizationType="none" class="input" (textChange)="syncDir.set($any($event).value)"></TextField>
-      <Label [text]="syncStatusText()" textWrap="true" [class]="'sync-status sync-' + sync.status().state"></Label>
-      <Label [text]="sync.status().message ?? ''" textWrap="true" class="error" [visibility]="sync.status().message ? 'visible' : 'collapse'"></Label>
-      <Label [text]="s.t().sync.offlineNote" textWrap="true" class="row-sub" [visibility]="sync.status().state === 'offline' ? 'visible' : 'collapse'"></Label>
-      <Label [text]="s.t().sync.passwordSession" textWrap="true" class="row-sub" [visibility]="passwordPersistent || syncProvider() === 'icloud' ? 'collapse' : 'visible'"></Label>
-      <Button [text]="s.t().sync.save" class="primary" (tap)="saveSync()"></Button>
-      <Button [text]="s.t().sync.syncNow" class="secondary" [isEnabled]="sync.active()" (tap)="sync.syncNow()"></Button>
+      <Label [text]="s.t().calendar.url" class="field-label"></Label>
+      <TextField [text]="calendarUrl()" hint="https://cloud.example.com/remote.php/dav/calendars/user/budget" keyboardType="url" autocorrect="false" autocapitalizationType="none" class="input" (textChange)="calendarUrl.set($any($event).value)"></TextField>
+      <Label [text]="s.t().calendar.username" class="field-label"></Label>
+      <TextField [text]="calendarUsername()" autocorrect="false" autocapitalizationType="none" class="input" (textChange)="calendarUsername.set($any($event).value)"></TextField>
+      <Label [text]="s.t().calendar.password" class="field-label"></Label>
+      <TextField [text]="calendarPassword()" [hint]="calendar.hasPassword() ? s.t().calendar.passwordKept : ''" secure="true" autocorrect="false" autocapitalizationType="none" class="input" (textChange)="calendarPassword.set($any($event).value)"></TextField>
+      <Label [text]="calendar.details()" textWrap="true" [class]="'calendar-status calendar-' + calendar.status().state"></Label>
+      <Label [text]="calendar.status().message ?? ''" textWrap="true" [class]="calendar.status().state === 'error' ? 'error' : 'row-sub'" [visibility]="calendar.status().message ? 'visible' : 'collapse'"></Label>
+      <Label [text]="s.t().calendar.passwordSession" textWrap="true" class="row-sub" [visibility]="passwordPersistent ? 'collapse' : 'visible'"></Label>
+      <Button [text]="s.t().calendar.save" class="primary" (tap)="saveCalendar()"></Button>
+      <Button [text]="s.t().calendar.test" class="secondary" [isEnabled]="!calendar.busy()" (tap)="testCalendar()"></Button>
+      <Button [text]="s.t().calendar.syncNow" class="secondary" [isEnabled]="calendarEnabled() && !calendar.busy()" (tap)="syncCalendar()"></Button>
 
       <Label [text]="s.t().settings.thresholds" class="section-title"></Label>
       <Label [text]="s.t().settings.thresholdsHelp" textWrap="true" class="row-sub"></Label>

@@ -3,7 +3,7 @@
  * `Strings` is the contract: both dictionaries implement it in full, so a
  * missing translation is a compile error rather than a blank label.
  */
-import type { AppLanguage, RemoteState } from 'budget-lib';
+import type { AppLanguage, CalendarState } from 'budget-lib';
 
 export interface Strings {
   appName: string;
@@ -42,12 +42,12 @@ export interface Strings {
     low: string; medium: string; high: string; thresholdsOrder: string; thresholdsSaved: string;
     manage: string; recurrences: string; chooseOption: string;
   };
-  sync: {
-    title: string; help: string; server: string; username: string; password: string;
-    passwordKept: string; remoteDir: string; enable: string; save: string; syncNow: string;
-    states: Record<RemoteState, string>; offlineNote: string; never: string;
-    lastSync(date: string): string; pending(count: number): string; passwordSession: string;
-    provider: string; providerWebdav: string; providerIcloud: string; icloudHelp: string;
+  calendar: {
+    title: string; help: string; enable: string; url: string; username: string; password: string;
+    passwordKept: string; passwordSession: string; save: string; test: string; syncNow: string;
+    states: Record<CalendarState, string>; never: string; lastSync(date: string): string;
+    offlineNote: string; invalidConfig: string; missingPassword: string; connectionOk: string;
+    authFailed: string; failed(message: string): string; skipped(count: number): string;
   };
   categories: {
     title: string; newName: string; exists(name: string): string;
@@ -124,24 +124,20 @@ const en: Strings = {
     manage: 'Manage', recurrences: 'Recurring transactions',
     chooseOption: 'Choose',
   },
-  sync: {
-    title: 'Synchronisation',
-    help: 'Stores the budget on a WebDAV server (Infomaniak kDrive) in the same layout as the desktop app. '
-      + 'Without a connection you can keep editing: changes are sent later.',
-    provider: 'Storage', providerWebdav: 'kDrive (WebDAV)', providerIcloud: 'iCloud Drive',
-    icloudHelp: 'Stores the budget in this app\'s iCloud Drive folder, shared between your Apple devices. '
-      + 'Needs iCloud Drive turned on for this device. Without a connection you can keep editing.',
-    server: 'Server address (WebDAV)', username: 'Username (e-mail)', password: 'Password / app password',
-    passwordKept: 'Leave empty to keep the saved password', remoteDir: 'Remote folder',
-    enable: 'Synchronise', save: 'Save and synchronise', syncNow: 'Synchronise now',
-    states: {
-      disabled: 'Synchronisation off', connecting: 'Connecting…', syncing: 'Synchronising…',
-      online: 'Up to date', offline: 'Offline', error: 'Error',
-    },
-    offlineNote: 'Changes are kept on this device and sent when the server is reachable.',
-    never: 'never', lastSync: (date) => `Last synchronisation: ${date}`,
-    pending: (count) => (count === 1 ? '1 change waiting' : `${count} changes waiting`),
-    passwordSession: 'The password cannot be stored securely on this build; it will be asked again after a restart.',
+  calendar: {
+    title: 'Online calendar (CalDAV)',
+    help: 'Transactions are stored as all-day events in this calendar, shared between desktop, mobile and web. Recurrence templates stay on this device.',
+    enable: 'Enable synchronization', url: 'Calendar URL', username: 'Username', password: 'Password / app password',
+    passwordKept: 'Leave empty to keep the saved password',
+    passwordSession: 'Secure storage is unavailable in this build. The password stays in memory for this session; enter it again after restarting.',
+    save: 'Save', test: 'Test connection', syncNow: 'Synchronize now',
+    states: { disabled: 'Synchronization off', syncing: 'Synchronizing...', online: 'Online', offline: 'Offline', error: 'Error' },
+    never: 'never', lastSync: (date) => 'Last synchronization: ' + date,
+    offlineNote: 'Keep editing locally. Synchronization resumes when the connection returns.',
+    invalidConfig: 'Enter an HTTP(S) calendar URL and a username.', missingPassword: 'Enter the calendar password.',
+    connectionOk: 'Connection successful.', authFailed: 'Authentication failed. Check the username and password.',
+    failed: (message) => 'Calendar request failed: ' + message,
+    skipped: (count) => count + ' conflict(s) skipped; synchronize again to retry.',
   },
   categories: {
     title: 'Categories', newName: 'New category',
@@ -243,24 +239,20 @@ const fr: Strings = {
     manage: 'Gérer', recurrences: 'Transactions récurrentes',
     chooseOption: 'Choisir',
   },
-  sync: {
-    title: 'Synchronisation',
-    help: 'Stocke le budget sur un serveur WebDAV (Infomaniak kDrive), avec la même organisation que l’application de bureau. '
-      + 'Hors connexion, vous pouvez continuer à modifier : les changements sont envoyés plus tard.',
-    provider: 'Stockage', providerWebdav: 'kDrive (WebDAV)', providerIcloud: 'iCloud Drive',
-    icloudHelp: 'Stocke le budget dans le dossier iCloud Drive de l’application, partagé entre vos appareils Apple. '
-      + 'iCloud Drive doit être activé sur cet appareil. Hors connexion, vous pouvez continuer à modifier.',
-    server: 'Adresse du serveur (WebDAV)', username: 'Identifiant (e-mail)', password: 'Mot de passe / mot de passe d’application',
-    passwordKept: 'Laisser vide pour conserver le mot de passe enregistré', remoteDir: 'Dossier distant',
-    enable: 'Synchroniser', save: 'Enregistrer et synchroniser', syncNow: 'Synchroniser maintenant',
-    states: {
-      disabled: 'Synchronisation désactivée', connecting: 'Connexion…', syncing: 'Synchronisation…',
-      online: 'À jour', offline: 'Hors ligne', error: 'Erreur',
-    },
-    offlineNote: 'Les changements restent sur cet appareil et seront envoyés dès que le serveur sera joignable.',
-    never: 'jamais', lastSync: (date) => `Dernière synchronisation : ${date}`,
-    pending: (count) => (count === 1 ? '1 modification en attente' : `${count} modifications en attente`),
-    passwordSession: 'Le mot de passe ne peut pas être stocké de façon sécurisée avec cette version ; il sera redemandé après un redémarrage.',
+  calendar: {
+    title: 'Calendrier en ligne (CalDAV)',
+    help: 'Les transactions sont stock\u00e9es comme des \u00e9v\u00e9nements sur toute la journ\u00e9e dans ce calendrier, partag\u00e9 entre bureau, mobile et web. Les mod\u00e8les de r\u00e9currence restent sur cet appareil.',
+    enable: 'Activer la synchronisation', url: 'Adresse du calendrier', username: 'Identifiant', password: 'Mot de passe / mot de passe d\u2019application',
+    passwordKept: 'Laisser vide pour conserver le mot de passe enregistr\u00e9',
+    passwordSession: 'Le stockage s\u00e9curis\u00e9 est indisponible dans cette version. Le mot de passe reste en m\u00e9moire pour cette session ; saisissez-le de nouveau apr\u00e8s un red\u00e9marrage.',
+    save: 'Enregistrer', test: 'Tester la connexion', syncNow: 'Synchroniser maintenant',
+    states: { disabled: 'Synchronisation d\u00e9sactiv\u00e9e', syncing: 'Synchronisation...', online: 'En ligne', offline: 'Hors ligne', error: 'Erreur' },
+    never: 'jamais', lastSync: (date) => 'Derni\u00e8re synchronisation : ' + date,
+    offlineNote: 'Continuez \u00e0 modifier localement. La synchronisation reprend au retour de la connexion.',
+    invalidConfig: 'Saisissez une adresse HTTP(S) de calendrier et un identifiant.', missingPassword: 'Saisissez le mot de passe du calendrier.',
+    connectionOk: 'Connexion r\u00e9ussie.', authFailed: 'Authentification refus\u00e9e. V\u00e9rifiez l\u2019identifiant et le mot de passe.',
+    failed: (message) => 'La requ\u00eate du calendrier a \u00e9chou\u00e9 : ' + message,
+    skipped: (count) => count + ' conflit(s) ignor\u00e9(s) ; relancez la synchronisation pour r\u00e9essayer.',
   },
   categories: {
     title: 'Catégories', newName: 'Nouvelle catégorie',

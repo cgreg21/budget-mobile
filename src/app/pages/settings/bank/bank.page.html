@@ -6,7 +6,7 @@
     <StackLayout class="form">
       <Label [text]="s.t().bank.help" textWrap="true" class="row-sub"></Label>
 
-      <Label [text]="status()" textWrap="true" [class]="'sync-status ' + (bank.connected() && !bank.expired() ? 'sync-online' : 'sync-offline')"></Label>
+      <Label [text]="status()" textWrap="true" [class]="'bank-status ' + (bank.connected() && !bank.expired() ? 'bank-online' : 'bank-offline')"></Label>
       <Label [text]="validity()" textWrap="true" class="row-sub" [visibility]="validity() ? 'visible' : 'collapse'"></Label>
       <Label [text]="lastImport()" textWrap="true" class="row-sub" [visibility]="bank.connected() ? 'visible' : 'collapse'"></Label>
       <Label [text]="bank.notice()?.text ?? ''" textWrap="true" [class]="bank.notice()?.tone === 'error' ? 'error' : 'row-sub'" [visibility]="bank.notice() ? 'visible' : 'collapse'"></Label>
