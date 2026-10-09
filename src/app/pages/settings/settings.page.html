@@ -66,11 +66,11 @@
       <Label [text]="s.t().settings.thresholds" class="section-title"></Label>
       <Label [text]="s.t().settings.thresholdsHelp" textWrap="true" class="row-sub"></Label>
       <Label [text]="s.t().settings.low" class="field-label"></Label>
-      <TextField [text]="low()" keyboardType="decimal" class="input" (textChange)="low.set($any($event).value)"></TextField>
+      <TextField [text]="low()" keyboardType="decimal" class="input" (blur)="low.set(s.normalizeInput(low()))" (textChange)="low.set($any($event).value)"></TextField>
       <Label [text]="s.t().settings.medium" class="field-label"></Label>
-      <TextField [text]="medium()" keyboardType="decimal" class="input" (textChange)="medium.set($any($event).value)"></TextField>
+      <TextField [text]="medium()" keyboardType="decimal" class="input" (blur)="medium.set(s.normalizeInput(medium()))" (textChange)="medium.set($any($event).value)"></TextField>
       <Label [text]="s.t().settings.high" class="field-label"></Label>
-      <TextField [text]="high()" keyboardType="decimal" class="input" (textChange)="high.set($any($event).value)"></TextField>
+      <TextField [text]="high()" keyboardType="decimal" class="input" (blur)="high.set(s.normalizeInput(high()))" (textChange)="high.set($any($event).value)"></TextField>
       <Label [text]="message()" textWrap="true" class="error" [visibility]="message() ? 'visible' : 'collapse'"></Label>
       <Button [text]="s.t().common.save" class="primary" (tap)="saveThresholds()"></Button>
     </StackLayout>

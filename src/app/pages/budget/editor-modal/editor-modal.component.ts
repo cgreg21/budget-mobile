@@ -34,7 +34,7 @@ export class EditorModalComponent extends BottomSheet<EditorContext> {
   private readonly date = this.existing?.date ?? this.b.defaultTransactionDate;
 
   readonly kind = signal<TransactionKind>(this.existing?.kind ?? 'expense');
-  readonly amount = signal(this.existing ? String(this.existing.amount) : '');
+  readonly amount = signal(this.existing ? this.s.formatInput(this.existing.amount) : '');
   readonly description = signal(this.existing?.description ?? '');
   readonly category = signal(this.existing?.category ?? this.b.defaultCategory);
   readonly repeat = signal(this.series !== undefined);

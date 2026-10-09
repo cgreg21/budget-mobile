@@ -1,4 +1,4 @@
-﻿import { SecureStorage } from '@nativescript/secure-storage';
+import { SecureStorage } from '@nativescript/secure-storage';
 
 const PASSWORD_KEY = 'remote-password';
 const BANK_KEY_KEY = 'bank-private-key';

@@ -124,9 +124,10 @@ Réglages → Banque importe les opérations d'un compte (visé : Crédit Mutuel
 3. Après l'autorisation, la banque renvoie vers l'app (schéma `budgetmobile://`, déclaré dans
    `Info.plist` et `AndroidManifest.xml`). Sinon, coller l'adresse affichée dans le champ prévu.
 
-- `core/bank/jwt.ts` : jeton RS256 signé sur l'appareil ; `core/bank/enable-banking.ts` : client HTTP ;
-  `core/bank/bank-mapping.ts` : conversion en transactions (catégorie devinée, identifiants déterministes) ;
-  `core/bank/bank.service.ts` : connexion, import, import automatique au plus toutes les 6 h.
+- `budget-lib` (`bank`, `enable-banking`) porte la logique : jeton RS256, client de l'API, pagination,
+  conversion en transactions (catégorie devinée, identifiants déterministes), lecture de l'adresse de retour.
+  `core/bank/platform.ts` fournit le transport HTTP NativeScript et la signature RSA (jsrsasign) ;
+  `core/bank/bank.service.ts` gère la connexion, l'import et l'import automatique au plus toutes les 6 h.
 - Les identifiants étant déterministes, la synchro WebDAV entre appareils ne crée pas de doublons ; une
   transaction supprimée n'est pas réimportée.
 - L'accès doit être renouvelé environ tous les 90 jours ; la banque limite les imports automatiques (~4/jour).

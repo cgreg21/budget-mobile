@@ -2,8 +2,9 @@ import { Component, NO_ERRORS_SCHEMA, computed, inject, signal } from '@angular/
 import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
 import { Dialogs } from '@nativescript/core';
 
+import type { Aspsp } from 'budget-lib';
+
 import { BankService } from '../../../core/bank/bank.service';
-import type { Aspsp } from '../../../core/bank/enable-banking';
 import { SettingsService } from '../../../core/settings.service';
 
 const MAX_CHOICES = 30;

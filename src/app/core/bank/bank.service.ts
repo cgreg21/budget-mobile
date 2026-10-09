@@ -1,19 +1,19 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Application, isAndroid, Utils, type AndroidActivityNewIntentEventData } from '@nativescript/core';
-import type { Transaction } from 'budget-lib';
+import {
+  bankImportStart, BankApiError, EnableBankingClient, isBankRedirect, isSessionExpired, normalizePrivateKey,
+  parseBankRedirect, toBudgetTransactions,
+  type Aspsp, type BankSession, type Transaction,
+} from 'budget-lib';
 
 import { BudgetService } from '../budget.service';
 import { readBankKey, writeBankKey } from '../secrets';
 import { SettingsService } from '../settings.service';
 import { createId, readJson, writeJson } from '../storage';
-import { toBudgetTransactions } from './bank-mapping';
-import { BankApiError, EnableBankingClient, type Aspsp, type BankSession } from './enable-banking';
-import { normalizePrivateKey } from './jwt';
+import { nativeBankHttp, rsaSigner } from './platform';
 
 const STATE_KEY = 'bank-state';
 const AUTO_IMPORT_EVERY_MS = 6 * 3600 * 1000;
-// Banks may book an entry a few days after its date: look back a little at every import.
-const OVERLAP_MS = 7 * 24 * 3600 * 1000;
 const MAX_REMEMBERED_IDS = 5000;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 export const DEFAULT_REDIRECT_URL = 'budgetmobile://bank';
@@ -64,28 +64,6 @@ const isStoredBank = (value: unknown): value is StoredBank => {
     && Array.isArray(candidate.importedIds);
 };
 
-/** The `code`, `state` and `error` the bank sends back, from a full URL or a bare code. */
-function parseRedirect(input: string): { code: string; state: string; error: string } {
-  const text = input.trim();
-  if (!text.includes('=') && !text.includes('?')) return { code: text, state: '', error: '' };
-  const query = text.slice(text.indexOf('?') + 1).split('#')[0];
-  const params = new Map<string, string>();
-  for (const pair of query.split('&')) {
-    const [key, ...rest] = pair.split('=');
-    const raw = rest.join('=').replace(/\+/g, ' ');
-    try {
-      params.set(key, decodeURIComponent(raw));
-    } catch {
-      params.set(key, raw);
-    }
-  }
-  return {
-    code: params.get('code') ?? '',
-    state: params.get('state') ?? '',
-    error: params.get('error_description') ?? params.get('error') ?? '',
-  };
-}
-
 const randomState = (): string => `${createId()}${createId()}`;
 
 /**
@@ -108,10 +86,7 @@ export class BankService {
   readonly notice = signal<BankNotice | null>(null);
   readonly hasKey = signal(readBankKey() !== '');
   readonly connected = computed(() => this.session() !== null);
-  readonly expired = computed(() => {
-    const until = this.session()?.validUntil ?? '';
-    return until !== '' && Date.parse(until) <= Date.now();
-  });
+  readonly expired = computed(() => isSessionExpired(this.session()));
 
   /** Listens for the return of the bank, and imports on start and resume when the last import is old. */
   start(): void {
@@ -119,8 +94,7 @@ export class BankService {
     this.started = true;
 
     const onUrl = (url: string): void => {
-      const redirect = this.config().redirectUrl;
-      if (redirect !== '' && url.startsWith(redirect.split('?')[0])) void this.handleRedirect(url);
+      if (isBankRedirect(url, this.config().redirectUrl)) void this.handleRedirect(url);
     };
     try {
       Application.on('sceneOpenURLContexts', (args) => {
@@ -191,7 +165,7 @@ export class BankService {
   /** Finishes the connection from the URL (or bare code) the bank sent back, then imports. */
   async handleRedirect(input: string): Promise<void> {
     const t = this.settings.t().bank;
-    const { code, state, error } = parseRedirect(input);
+    const { code, state, error } = parseBankRedirect(input);
     const pending = this.stored().pendingState;
     if (error !== '') return this.fail(t.refused(error));
     if (pending === '' || (state !== '' && state !== pending)) return this.fail(t.unexpectedReturn);
@@ -214,7 +188,7 @@ export class BankService {
     const client = this.client();
     if (client === null) return;
 
-    const dateFrom = this.importStart();
+    const dateFrom = bankImportStart(this.config().importFrom, this.stored().lastImportAt);
     const categories = this.budget.categories();
     const incoming = await this.guard(async () => {
       const all: Transaction[] = [];
@@ -253,14 +227,6 @@ export class BankService {
     await this.importNow(true);
   }
 
-  private importStart(): string {
-    const { importFrom } = this.config();
-    const { lastImportAt } = this.stored();
-    if (lastImportAt === '') return importFrom;
-    const overlap = new Date(Date.parse(lastImportAt) - OVERLAP_MS).toISOString().slice(0, 10);
-    return overlap > importFrom ? overlap : importFrom;
-  }
-
   private client(): EnableBankingClient | null {
     const { applicationId } = this.config();
     const key = readBankKey();
@@ -268,7 +234,7 @@ export class BankService {
       this.fail(this.settings.t().bank.missingCredentials);
       return null;
     }
-    return new EnableBankingClient(applicationId, key);
+    return new EnableBankingClient(nativeBankHttp, rsaSigner, applicationId, key);
   }
 
   /** Runs a call with the busy flag on; errors become a notice and the result `undefined`. */

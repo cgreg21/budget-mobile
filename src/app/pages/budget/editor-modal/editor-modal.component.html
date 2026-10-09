@@ -10,8 +10,9 @@
         </GridLayout>
 
         <Label [text]="s.t().editor.amount" class="field-label"></Label>
-        <TextField [text]="amount()" keyboardType="decimal" hint="0.00" class="input"
+        <TextField [text]="amount()" keyboardType="decimal" [hint]="s.formatInput(0)" class="input"
                    (focus)="revealField($any($event).object)"
+                   (blur)="amount.set(s.normalizeInput(amount()))"
                    (textChange)="amount.set($any($event).value)"></TextField>
 
         <Label [text]="s.t().editor.description" class="field-label"></Label>

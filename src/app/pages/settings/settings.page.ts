@@ -33,9 +33,9 @@ export class SettingsPage {
   readonly sync = inject(SyncService);
   private readonly router = inject(RouterExtensions);
 
-  readonly low = signal(String(this.b.thresholds().low));
-  readonly medium = signal(String(this.b.thresholds().medium));
-  readonly high = signal(String(this.b.thresholds().high));
+  readonly low = signal(this.s.formatInput(this.b.thresholds().low));
+  readonly medium = signal(this.s.formatInput(this.b.thresholds().medium));
+  readonly high = signal(this.s.formatInput(this.b.thresholds().high));
   readonly message = signal('');
   readonly syncEnabled = signal(this.sync.config().enabled);
   readonly syncProvider = signal<RemoteProviderKind>(this.sync.config().provider);

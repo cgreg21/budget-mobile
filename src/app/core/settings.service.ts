@@ -20,9 +20,20 @@ export function isLightTheme(): boolean {
   return Application.getRootView()?.cssClasses.has('ns-light') ?? false;
 }
 
-/** Reads an amount typed with a comma or a dot as decimal separator (NaN when it is not a number). */
+/**
+ * Reads an amount typed with a comma or a dot as decimal separator, with or without grouping
+ * spaces ("1 234,56", "1,234.56"); NaN when it is not a number.
+ */
 export function parseAmount(text: string): number {
-  return Number(text.replace(',', '.').trim());
+  const clean = text.replace(/[\s\u00A0\u202F]/g, '');
+  const lastComma = clean.lastIndexOf(',');
+  const lastDot = clean.lastIndexOf('.');
+  if (lastComma >= 0 && lastDot >= 0) {
+    const decimal = lastComma > lastDot ? ',' : '.';
+    const group = decimal === ',' ? /\./g : /,/g;
+    return Number(clean.replace(group, '').replace(decimal, '.'));
+  }
+  return Number(clean.replace(',', '.'));
 }
 
 /** General preferences, and every formatter that depends on them. */
@@ -62,14 +73,35 @@ export class SettingsService {
   }
 
   formatAmount(value: number): string {
-    const { language, currency, amountFormat } = this.settings();
-    const style: Exclude<AmountFormat, 'locale'> =
-      amountFormat === 'locale' ? (language === 'fr' ? 'space-comma' : 'comma-dot') : amountFormat;
+    const { currency } = this.settings();
+    const style = this.amountStyle();
     const [integer, decimals] = Math.abs(value).toFixed(2).split('.');
     const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, style === 'space-comma' ? '\u00A0' : ',');
     const number = `${value < 0 ? '-' : ''}${grouped}${style === 'space-comma' ? ',' : '.'}${decimals}`;
     const symbol = CURRENCY_SYMBOLS[currency];
     return style === 'space-comma' ? `${number}\u00A0${symbol}` : `${symbol}${number}`;
+  }
+
+  /** The decimal separator of the chosen amount format: what an amount field should show and expect. */
+  get decimalSeparator(): string {
+    return this.amountStyle() === 'space-comma' ? ',' : '.';
+  }
+
+  /** A number as it is shown in an edit field: two decimals, the format's separator, no grouping. */
+  formatInput(value: number): string {
+    return value.toFixed(2).replace('.', this.decimalSeparator);
+  }
+
+  /** Tidies what was typed in an amount field; text that is not a number is left for the user to fix. */
+  normalizeInput(text: string): string {
+    if (text.trim() === '') return '';
+    const value = parseAmount(text);
+    return Number.isFinite(value) ? this.formatInput(value) : text;
+  }
+
+  private amountStyle(): Exclude<AmountFormat, 'locale'> {
+    const { language, amountFormat } = this.settings();
+    return amountFormat === 'locale' ? (language === 'fr' ? 'space-comma' : 'comma-dot') : amountFormat;
   }
 
   /** The amount preceded by the sign of its kind: + for an income, - for an expense. */
