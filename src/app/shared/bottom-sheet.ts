@@ -127,7 +127,17 @@ function avoidKeyboard(view: View): void {
     window.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
     return true;
   };
-  if (!apply()) setTimeout(apply, 50);
+  if (!apply()) retryWhileLoaded(view, apply);
+}
+
+/** The dialog window may not exist yet on the first layout: try again shortly, unless the view is gone. */
+function retryWhileLoaded(view: View, apply: () => boolean, attempts = 5): void {
+  const timer = setTimeout(() => {
+    view.off(View.unloadedEvent, cancel);
+    if (!apply() && attempts > 1) retryWhileLoaded(view, apply, attempts - 1);
+  }, 50);
+  const cancel = (): void => clearTimeout(timer);
+  view.once(View.unloadedEvent, cancel);
 }
 
 /**
@@ -150,5 +160,5 @@ function dockToBottom(view: View): void {
     window.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
     return true;
   };
-  if (!apply()) setTimeout(apply, 50);
+  if (!apply()) retryWhileLoaded(view, apply);
 }

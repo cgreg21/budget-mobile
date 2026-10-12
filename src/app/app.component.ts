@@ -1,4 +1,5 @@
 import { Component, NO_ERRORS_SCHEMA, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { PageRouterOutlet, RouterExtensions } from '@nativescript/angular';
 import { SlideInOnTopTransition } from 'nativescript-ui-sidedrawer';
@@ -48,7 +49,7 @@ export class AppComponent {
   constructor() {
     this.calendar.start();
     this.bank.start();
-    inject(Router).events.subscribe((event) => {
+    inject(Router).events.pipe(takeUntilDestroyed()).subscribe((event) => {
       if (event instanceof NavigationEnd) this.url.set(event.urlAfterRedirects);
     });
   }
