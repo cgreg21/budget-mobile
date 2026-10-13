@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["vitest/globals", "node"],
+    "lib": ["ESNext", "dom", "dom.iterable"]
+  },
+  "include": ["src/tests/**/*.ts", "src/app/**/*.ts"],
+  "files": ["./references.d.ts"],
+  "exclude": ["node_modules", "platforms", "e2e"]
+}
