@@ -120,3 +120,16 @@ ns run android          # ou ns run ios
 
 `budget-lib` est référencée par `../budget-lib` : elle doit être disponible dans le
 workspace, à côté de `budget-mobile`.
+
+## Tests
+
+```sh
+npm run typecheck       # tsconfig.json (application) puis tsconfig.spec.json (tests)
+npm test                # vitest
+npm run test:coverage   # couverture (v8)
+```
+
+Les tests (`src/tests/**/*.spec.ts`) s'exécutent avec vitest et jsdom, hors du runtime NativeScript :
+les modules `@nativescript/*` et les plugins natifs sont remplacés par des doublures en mémoire
+(`src/tests/stubs/`, alias déclarés dans `vitest.config.mts`), dont l'état est remis à zéro avant
+chaque test par `src/tests/setup.ts`. Les services et composants Angular sont instanciés avec `TestBed`.

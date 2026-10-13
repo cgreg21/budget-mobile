@@ -7,6 +7,8 @@ import { vi } from 'vitest';
 export interface FakeRootView {
   cssClasses: Set<string>;
   _onCssStateChange: () => void;
+  showDrawer?: () => void;
+  closeDrawer?: () => void;
 }
 
 type NsState = {
@@ -39,10 +41,20 @@ export function resetNativeScript(): void {
   nsState.systemAppearance = 'dark';
   nsState.connectionType = 1;
   nsState.events.clear();
+  setPlatform('android');
+  Device.osVersion = '17';
   Http.request.mockReset();
   Dialogs.confirm.mockReset();
   Dialogs.alert.mockReset();
+  Dialogs.action.mockReset();
   Utils.openUrl.mockReset();
+  Application.android.on.mockReset();
+}
+
+/** Test helper: switches the `isAndroid` / `isIOS` live bindings (reset to Android before each test). */
+export function setPlatform(platform: 'android' | 'ios' | 'none'): void {
+  isAndroid = platform === 'android';
+  isIOS = platform === 'ios';
 }
 
 export const ApplicationSettings = {
@@ -85,16 +97,16 @@ export const Connectivity = {
 };
 
 export const Http = { request: vi.fn() };
-export const Dialogs = { confirm: vi.fn(), alert: vi.fn() };
+export const Dialogs = { confirm: vi.fn(), alert: vi.fn(), action: vi.fn() };
 export const Utils = { openUrl: vi.fn(), android: {}, ios: {} };
 
 export const knownFolders = { documents: () => ({ path: nsState.documentsPath }) };
 export const path = { join: (...parts: string[]) => parts.join('/') };
 
-export const isAndroid = true;
-export const isIOS = false;
+export let isAndroid = true;
+export let isIOS = false;
 
-export const Device = { os: 'Android', osVersion: '14', sdkVersion: '34', deviceType: 'Phone' };
+export const Device = { os: 'Android', osVersion: '17', sdkVersion: '34', deviceType: 'Phone' };
 export const Screen = {
   mainScreen: { widthDIPs: 400, heightDIPs: 800, widthPixels: 1200, heightPixels: 2400, scale: 3 },
 };
@@ -106,6 +118,9 @@ export const CoreTypes = {
 
 export const GestureStateTypes = { began: 1, changed: 2, ended: 3, cancelled: 4 };
 
+/** What `View.animate` resolves with: a promise that can also be cancelled, like the real animation. */
+export type FakeAnimation = Promise<void> & { cancel: () => void };
+
 export class View {
   static unloadedEvent = 'unloaded';
   static loadedEvent = 'loaded';
@@ -114,17 +129,22 @@ export class View {
   marginBottom = 0;
   verticalAlignment = 'top';
   private handlers = new Map<string, Set<(args?: unknown) => void>>();
+  private onceWrappers = new Map<(args?: unknown) => void, (args?: unknown) => void>();
   opacity = 1;
   translateX = 0;
   translateY = 0;
   scaleX = 1;
   scaleY = 1;
   visibility = 'visible';
-  animate = vi.fn(() => Promise.resolve());
+  isLoaded = true;
+  parent: View | null = null;
+  animate = vi.fn((): FakeAnimation => Object.assign(Promise.resolve(), { cancel: vi.fn() }));
   requestLayout = vi.fn();
+  focus = vi.fn();
   getMeasuredWidth = vi.fn(() => 0);
   getMeasuredHeight = vi.fn(() => 0);
   getActualSize = vi.fn(() => ({ width: 0, height: 0 }));
+  getLocationRelativeTo = vi.fn((_other: View) => ({ x: 0, y: 0 }));
   getChildAt = vi.fn((_index: number): View | undefined => undefined);
   _onCssStateChange = vi.fn();
 
@@ -134,11 +154,12 @@ export class View {
     set.add(handler);
   }
   once(event: string, handler: (args?: unknown) => void): void {
-    const wrapper = (args?: unknown): void => { this.off(event, wrapper); handler(args); };
+    const wrapper = (args?: unknown): void => { this.off(event, handler); handler(args); };
+    this.onceWrappers.set(handler, wrapper);
     this.on(event, wrapper);
   }
   off(event: string, handler?: (args?: unknown) => void): void {
-    if (handler) this.handlers.get(event)?.delete(handler);
+    if (handler) this.handlers.get(event)?.delete(this.onceWrappers.get(handler) ?? handler);
     else this.handlers.delete(event);
   }
   /** Test helper: fires every handler registered on this view for `event`. */
@@ -153,6 +174,7 @@ export class Page extends View {
 export class ScrollView extends View {
   verticalOffset = 0;
   scrollableHeight = 0;
+  content: View | null = null;
   scrollToVerticalOffset = vi.fn();
 }
 

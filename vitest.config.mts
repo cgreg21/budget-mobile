@@ -1,6 +1,8 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
+import { angularJit } from './src/tests/angular-jit.plugin.mts';
+
 const stub = (name: string): string => fileURLToPath(new URL(`./src/tests/stubs/${name}.ts`, import.meta.url));
 
 /*
@@ -9,6 +11,7 @@ const stub = (name: string): string => fileURLToPath(new URL(`./src/tests/stubs/
  * with vitest + jsdom + Angular TestBed.
  */
 export default defineConfig({
+  plugins: [angularJit()],
   // The app's tsconfig only lists platform files; make sure the Angular decorators are compiled the legacy way.
   oxc: { decorator: { legacy: true } },
   resolve: {
