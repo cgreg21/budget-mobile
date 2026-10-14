@@ -63,6 +63,11 @@
       <TextField [text]="high()" keyboardType="decimal" class="input" (blur)="high.set(s.normalizeInput(high()))" (textChange)="high.set($any($event).value)"></TextField>
       <Label [text]="message()" textWrap="true" class="error" [visibility]="message() ? 'visible' : 'collapse'"></Label>
       <Button [text]="s.t().common.save" class="primary" (tap)="saveThresholds()"></Button>
+
+      <Label [text]="s.t().config.title" class="section-title"></Label>
+      <Label [text]="s.t().config.help" textWrap="true" class="row-sub"></Label>
+      <Button [text]="s.t().config.export" class="secondary" [isEnabled]="!configBusy()" (tap)="exportConfig()"></Button>
+      <Button [text]="s.t().config.import" class="secondary" [isEnabled]="!configBusy()" (tap)="importConfig()"></Button>
     </StackLayout>
   </ScrollView>
 </GridLayout>

@@ -1,11 +1,12 @@
 ﻿import { TestBed } from '@angular/core/testing';
 import { ModalDialogService, RouterExtensions } from '@nativescript/angular';
-import { DEFAULT_CATEGORY_ICON } from 'budget-lib';
+import { ConfigFileError, DEFAULT_CATEGORY_ICON, emptyConfigData } from 'budget-lib';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BankService } from '~/app/core/bank/bank.service';
 import { BudgetService, type MonthlyTotals } from '~/app/core/budget.service';
 import { CalendarSyncService } from '~/app/core/calendar-sync.service';
+import { ConfigArchiveService } from '~/app/core/config-archive.service';
 import { SettingsService } from '~/app/core/settings.service';
 import { CategoriesPage } from '~/app/pages/categories/categories.page';
 import { HistoryPage } from '~/app/pages/history/history.page';
@@ -420,6 +421,113 @@ describe('SettingsPage', () => {
     expect(page.message()).toBe('');
     expect(budget.thresholds()).toEqual({ low: 100, medium: 200, high: 300 });
     expect(Dialogs.alert).toHaveBeenCalledWith(expect.objectContaining({ message: settings.t().settings.thresholdsSaved }));
+  });
+
+  describe('configuration file', () => {
+    let archive: ConfigArchiveService;
+    const alerts = (): string[] => Dialogs.alert.mock.calls.map((c) => (c[0] as { message: string }).message);
+    const answers = (...texts: (string | null)[]): void => {
+      for (const text of texts) Dialogs.prompt.mockResolvedValueOnce(text === null ? { result: false, text: '' } : { result: true, text });
+    };
+
+    beforeEach(() => {
+      archive = TestBed.inject(ConfigArchiveService);
+    });
+
+    it('exports after a passphrase typed twice', async () => {
+      const t = settings.t().config;
+      const exportEncrypted = vi.spyOn(archive, 'exportEncrypted').mockResolvedValue(true);
+      answers(null);
+      await page.exportConfig();
+      answers('short');
+      await page.exportConfig();
+      answers('long enough', null);
+      await page.exportConfig();
+      answers('long enough', 'long enougH');
+      await page.exportConfig();
+      expect(exportEncrypted).not.toHaveBeenCalled();
+      expect(alerts()).toEqual([t.tooShort, t.mismatch]);
+      expect(Dialogs.prompt).toHaveBeenLastCalledWith(expect.objectContaining({ inputType: 'password', message: t.confirmPrompt }));
+
+      answers('long enough', 'long enough');
+      await page.exportConfig();
+      expect(exportEncrypted).toHaveBeenCalledWith('long enough');
+      expect(alerts().at(-1)).toBe(t.exported);
+      expect(page.configBusy()).toBe(false);
+
+      exportEncrypted.mockResolvedValue(false);
+      answers('long enough', 'long enough');
+      await page.exportConfig();
+      expect(alerts().at(-1)).toBe(t.cancelled);
+
+      exportEncrypted.mockRejectedValue(new Error('disk full'));
+      answers('long enough', 'long enough');
+      await page.exportConfig();
+      expect(alerts().at(-1)).toBe(t.failed('disk full'));
+    });
+
+    it('imports a picked file after the summary is confirmed', async () => {
+      const t = settings.t().config;
+      const data = { ...emptyConfigData(), thresholds: { low: 1, medium: 2, high: 3 } };
+      data.calendar = { ...data.calendar, enabled: true, calendarUrl: 'https://cal.example/u', username: 'me', password: 'pw' };
+      const pickFile = vi.spyOn(archive, 'pickFile').mockResolvedValue(null);
+      const openEncrypted = vi.spyOn(archive, 'openEncrypted').mockResolvedValue(data);
+      const apply = vi.spyOn(archive, 'apply');
+
+      await page.importConfig();
+      expect(Dialogs.prompt).not.toHaveBeenCalled();
+      pickFile.mockResolvedValue('{"file":true}');
+      answers(null);
+      await page.importConfig();
+      expect(openEncrypted).not.toHaveBeenCalled();
+
+      answers('any passphrase');
+      Dialogs.confirm.mockResolvedValueOnce(false);
+      await page.importConfig();
+      expect(openEncrypted).toHaveBeenCalledWith('{"file":true}', 'any passphrase');
+      expect(Dialogs.confirm).toHaveBeenCalledWith(expect.objectContaining({ title: t.importTitle, message: page.configSummary(data) }));
+      expect(apply).not.toHaveBeenCalled();
+
+      answers('any passphrase');
+      Dialogs.confirm.mockResolvedValueOnce(true);
+      await page.importConfig();
+      expect(apply).toHaveBeenCalledWith(data);
+      expect(page.low()).toBe(settings.formatInput(1));
+      expect(page.high()).toBe(settings.formatInput(3));
+      expect(page.calendarEnabled()).toBe(true);
+      expect(page.calendarUrl()).toBe('https://cal.example/u');
+      expect(page.calendarUsername()).toBe('me');
+      expect(alerts().at(-1)).toBe(t.imported);
+      expect(page.configBusy()).toBe(false);
+    });
+
+    it('explains why a file could not be imported', async () => {
+      const t = settings.t().config;
+      const pickFile = vi.spyOn(archive, 'pickFile').mockRejectedValue(new Error('denied'));
+      await page.importConfig();
+      expect(alerts()).toEqual([t.readFailed]);
+
+      pickFile.mockResolvedValue('text');
+      const openEncrypted = vi.spyOn(archive, 'openEncrypted');
+      for (const code of ['format', 'passphrase', 'content'] as const) {
+        openEncrypted.mockRejectedValueOnce(new ConfigFileError(code));
+        answers('any passphrase');
+        await page.importConfig();
+        expect(alerts().at(-1)).toBe(t.errors[code]);
+      }
+      openEncrypted.mockRejectedValueOnce('boom');
+      answers('any passphrase');
+      await page.importConfig();
+      expect(alerts().at(-1)).toBe(t.failed('boom'));
+    });
+
+    it('lists what the file contains', () => {
+      const t = settings.t().config;
+      const empty = emptyConfigData();
+      expect(page.configSummary(empty)).toBe(`${t.summaryIntro}\n\u2022 ${t.summaryNone}`);
+      const full = { ...empty, calendar: { ...empty.calendar, username: 'me', password: 'pw' }, bank: { config: { ...TestBed.inject(BankService).config(), applicationId: 'a' }, privateKey: 'k' } };
+      expect(page.configSummary(full)).toBe([t.summaryIntro, `\u2022 ${t.summaryCalendar}`, `\u2022 ${t.summaryCalendarPassword}`, `\u2022 ${t.summaryBank}`, `\u2022 ${t.summaryBankKey}`].join('\n'));
+    });
   });
 });
 

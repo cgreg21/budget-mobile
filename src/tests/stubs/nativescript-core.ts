@@ -17,6 +17,7 @@ type NsState = {
   systemAppearance: 'dark' | 'light' | null;
   connectionType: number;
   documentsPath: string;
+  files: Map<string, string>;
   events: Map<string, Set<(args: unknown) => void>>;
 };
 
@@ -28,6 +29,7 @@ export const nsState: NsState = g.__nsState ??= {
   systemAppearance: 'dark',
   connectionType: 1,
   documentsPath: '/documents',
+  files: new Map<string, string>(),
   events: new Map(),
 };
 
@@ -41,12 +43,14 @@ export function resetNativeScript(): void {
   nsState.systemAppearance = 'dark';
   nsState.connectionType = 1;
   nsState.events.clear();
+  nsState.files.clear();
   setPlatform('android');
   Device.osVersion = '17';
   Http.request.mockReset();
   Dialogs.confirm.mockReset();
   Dialogs.alert.mockReset();
   Dialogs.action.mockReset();
+  Dialogs.prompt.mockReset();
   Utils.openUrl.mockReset();
   Application.android.on.mockReset();
 }
@@ -97,11 +101,27 @@ export const Connectivity = {
 };
 
 export const Http = { request: vi.fn() };
-export const Dialogs = { confirm: vi.fn(), alert: vi.fn(), action: vi.fn() };
+export const Dialogs = { confirm: vi.fn(), alert: vi.fn(), action: vi.fn(), prompt: vi.fn() };
+export const inputType = { text: 'text', password: 'password', email: 'email', number: 'number', decimal: 'decimal', phone: 'phone' };
 export const Utils = { openUrl: vi.fn(), android: {}, ios: {} };
 
 export const knownFolders = { documents: () => ({ path: nsState.documentsPath }) };
 export const path = { join: (...parts: string[]) => parts.join('/') };
+
+/** In-memory files, keyed by path (`nsState.files`); a missing file reads as an error, like the real one. */
+export class File {
+  private constructor(readonly path: string) {}
+  static fromPath(path: string): File { return new File(path); }
+  static exists(path: string): boolean { return nsState.files.has(path); }
+  readText(): Promise<string> {
+    const text = nsState.files.get(this.path);
+    return text === undefined ? Promise.reject(new Error(`No such file: ${this.path}`)) : Promise.resolve(text);
+  }
+  writeText(content: string): Promise<void> {
+    nsState.files.set(this.path, content);
+    return Promise.resolve();
+  }
+}
 
 export let isAndroid = true;
 export let isIOS = false;

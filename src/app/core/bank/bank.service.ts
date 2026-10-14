@@ -3,7 +3,7 @@ import { Application, isAndroid, Utils, type AndroidActivityNewIntentEventData }
 import {
   bankImportStart, BankApiError, defaultBankState, EnableBankingClient, isBankAutoImportDue, isBankDate, isBankRedirect,
   isBankState, isSessionExpired, normalizePrivateKey, parseBankRedirect, rememberBankIds, toBudgetTransactions,
-  type Aspsp, type BankState, type Transaction,
+  type Aspsp, type BankConfig, type BankState, type Transaction,
 } from 'budget-lib';
 
 import { BudgetService } from '../budget.service';
@@ -178,6 +178,20 @@ export class BankService {
     this.hasKey.set(false);
     this.disconnect();
     this.update({ config: { ...this.config(), applicationId: '' } });
+  }
+
+  /**
+   * Replaces the configuration with one from another device (configuration import). An empty key
+   * keeps the current one; a different application id drops the session, which belonged to the old one.
+   */
+  importConfig(config: BankConfig, privateKey: string): void {
+    if (privateKey !== '') {
+      writeBankKey(normalizePrivateKey(privateKey));
+      this.hasKey.set(true);
+    }
+    const sameApplication = config.applicationId === this.config().applicationId;
+    this.update({ config: { ...config }, ...(sameApplication ? {} : { session: null, pendingState: '' }) });
+    this.notice.set(null);
   }
 
   private async autoImport(): Promise<void> {

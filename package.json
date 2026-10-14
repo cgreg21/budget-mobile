@@ -24,6 +24,7 @@
     "@angular/router": "~22.0.0",
     "@nativescript-community/sqlite": "^3.5.9",
     "@nativescript-community/ui-chart": "^2.0.30",
+    "@nativescript-community/ui-document-picker": "^1.1.29",
     "@nativescript/angular": "~22.0.0",
     "@nativescript/core": "~9.1.0",
     "@nativescript/secure-storage": "^4.0.2",

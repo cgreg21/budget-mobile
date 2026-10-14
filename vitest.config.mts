@@ -21,6 +21,7 @@ export default defineConfig({
       { find: '@nativescript/angular', replacement: stub('nativescript-angular') },
       { find: '@nativescript/secure-storage', replacement: stub('secure-storage') },
       { find: '@nativescript-community/sqlite', replacement: stub('sqlite') },
+      { find: '@nativescript-community/ui-document-picker', replacement: stub('document-picker') },
       { find: /^@nativescript-community\/ui-canvas.*$/, replacement: stub('plugins') },
       { find: /^@nativescript-community\/ui-chart.*$/, replacement: stub('plugins') },
       { find: /^nativescript-ui-sidedrawer.*$/, replacement: stub('plugins') },

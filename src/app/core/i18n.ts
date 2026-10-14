@@ -3,7 +3,7 @@
  * `Strings` is the contract: both dictionaries implement it in full, so a
  * missing translation is a compile error rather than a blank label.
  */
-import type { AppLanguage, CalendarState } from 'budget-lib';
+import type { AppLanguage, CalendarState, ConfigFileErrorCode } from 'budget-lib';
 
 export interface Strings {
   appName: string;
@@ -41,6 +41,14 @@ export interface Strings {
     themeDark: string; formatLocale: string; thresholds: string; thresholdsHelp: string;
     low: string; medium: string; high: string; thresholdsOrder: string; thresholdsSaved: string;
     manage: string; recurrences: string; chooseOption: string;
+  };
+  config: {
+    title: string; help: string; export: string; import: string;
+    passphraseTitle: string; passphrasePrompt: string; confirmPrompt: string; passphraseHint: string;
+    tooShort: string; mismatch: string; exported: string; cancelled: string;
+    importTitle: string; summaryIntro: string; summaryCalendar: string; summaryCalendarPassword: string;
+    summaryBank: string; summaryBankKey: string; summaryNone: string; apply: string; imported: string;
+    errors: Record<ConfigFileErrorCode, string>; readFailed: string; failed(message: string): string;
   };
   calendar: {
     title: string; help: string; enable: string; url: string; username: string; password: string;
@@ -123,6 +131,29 @@ const en: Strings = {
     thresholdsOrder: 'Thresholds must satisfy x < y < z.', thresholdsSaved: 'Thresholds saved',
     manage: 'Manage', recurrences: 'Recurring transactions',
     chooseOption: 'Choose',
+  },
+  config: {
+    title: 'Configuration',
+    help: 'Settings, thresholds, calendar account and bank credentials, in a file encrypted with a passphrase. The file contains the calendar password and the bank private key: keep it safe. The passphrase cannot be recovered.',
+    export: 'Export the configuration', import: 'Import a configuration',
+    passphraseTitle: 'Passphrase', passphrasePrompt: 'Passphrase of the file (8 characters or more)',
+    confirmPrompt: 'Type the passphrase again', passphraseHint: 'Passphrase',
+    tooShort: 'The passphrase must be at least 8 characters long.', mismatch: 'The two passphrases differ.',
+    exported: 'Configuration exported.', cancelled: 'Export cancelled.',
+    importTitle: 'Import this configuration?',
+    summaryIntro: 'The current settings will be replaced. The file contains:',
+    summaryCalendar: 'the online calendar account', summaryCalendarPassword: 'the calendar password',
+    summaryBank: 'the bank settings', summaryBankKey: 'the bank private key',
+    summaryNone: 'general settings and thresholds only',
+    apply: 'Import', imported: 'Configuration imported.',
+    errors: {
+      format: 'This is not a Budget configuration file, or it comes from a newer version.',
+      passphrase: 'Wrong passphrase, or damaged file.',
+      content: 'The file does not contain a valid configuration.',
+      'weak-passphrase': 'The passphrase must be at least 8 characters long.',
+    },
+    readFailed: 'The file could not be read.',
+    failed: (message) => `Operation failed: ${message}`,
   },
   calendar: {
     title: 'Online calendar (CalDAV)',
@@ -238,6 +269,29 @@ const fr: Strings = {
     thresholdsOrder: 'Les seuils doivent respecter x < y < z.', thresholdsSaved: 'Seuils enregistrés',
     manage: 'Gérer', recurrences: 'Transactions récurrentes',
     chooseOption: 'Choisir',
+  },
+  config: {
+    title: 'Configuration',
+    help: 'Réglages, seuils, compte du calendrier et identifiants bancaires, dans un fichier chiffré par une phrase secrète. Le fichier contient le mot de passe du calendrier et la clé privée bancaire : conservez-le en lieu sûr. La phrase secrète ne peut pas être récupérée.',
+    export: 'Exporter la configuration', import: 'Importer une configuration',
+    passphraseTitle: 'Phrase secrète', passphrasePrompt: 'Phrase secrète du fichier (8 caractères ou plus)',
+    confirmPrompt: 'Saisissez à nouveau la phrase secrète', passphraseHint: 'Phrase secrète',
+    tooShort: 'La phrase secrète doit comporter au moins 8 caractères.', mismatch: 'Les deux phrases secrètes diffèrent.',
+    exported: 'Configuration exportée.', cancelled: 'Export annulé.',
+    importTitle: 'Importer cette configuration ?',
+    summaryIntro: 'Les réglages actuels seront remplacés. Le fichier contient :',
+    summaryCalendar: 'le compte du calendrier en ligne', summaryCalendarPassword: 'le mot de passe du calendrier',
+    summaryBank: 'les réglages bancaires', summaryBankKey: 'la clé privée bancaire',
+    summaryNone: 'uniquement les réglages généraux et les seuils',
+    apply: 'Importer', imported: 'Configuration importée.',
+    errors: {
+      format: 'Ce fichier n’est pas une configuration Budget, ou provient d’une version plus récente.',
+      passphrase: 'Phrase secrète incorrecte, ou fichier endommagé.',
+      content: 'Le fichier ne contient pas une configuration valide.',
+      'weak-passphrase': 'La phrase secrète doit comporter au moins 8 caractères.',
+    },
+    readFailed: 'Le fichier n’a pas pu être lu.',
+    failed: (message) => `Échec de l’opération : ${message}`,
   },
   calendar: {
     title: 'Calendrier en ligne (CalDAV)',

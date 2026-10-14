@@ -13,6 +13,8 @@ Application mobile NativeScript + Angular + TypeScript, portage de `budget-app` 
   Statistiques, Historique et Réglages. L'en-tête
   ne garde que le bouton du menu et, sur l'accueil, celui des filtres.
 - Réglages : langue (fr/en), devise, formats de date et de montant, thème clair/sombre/système
+- Export / import de la configuration dans un fichier chiffré (`.budgetcfg`), pour la reporter sur un
+  autre appareil ou une autre version de l'application (bureau, web)
 
 La logique métier (transactions, mois, récurrences) vient de la
 bibliothèque partagée [`budget-lib`](https://github.com/cgreg21/budget-lib), commune avec la version GTK ; les transactions,
@@ -23,13 +25,13 @@ premier lancement. Si la bibliothèque SQLite native n'est pas disponible dans l
 La configuration (réglages généraux et seuils du solde) reste dans `ApplicationSettings`.
 Les données restent locales par défaut ; la synchronisation optionnelle CalDAV échange les
 transactions avec un calendrier en ligne. SQLite reste la copie de travail hors connexion.
-Non porté : sauvegarde/CSV.
+Non porté : sauvegarde des données/CSV.
 
 ## Organisation du code
 
 ```text
 src/app/
-├── core/                     services (budget, réglages, base SQLite, calendrier CalDAV, import bancaire, traductions)
+├── core/                     services (budget, réglages, base SQLite, calendrier CalDAV, import bancaire, configuration chiffrée, traductions)
 ├── shared/                   éléments utilisés par plusieurs pages
 │   ├── icons.ts              glyphes Material Design Icons (interface et icônes de catégorie)
 │   ├── bottom-sheet.ts       classe de base des feuilles du bas et fonction d'ouverture
@@ -110,6 +112,28 @@ Réglages → Banque importe les opérations d'un compte (visé : Crédit Mutuel
   n'est pas réimportée.
 - L'accès doit être renouvelé environ tous les 90 jours ; la banque limite les imports automatiques (~4/jour).
 
+## Fichier de configuration chiffré
+
+Réglages → *Configuration* : *Exporter la configuration* écrit les réglages généraux, les seuils, le compte
+du calendrier (adresse, identifiant, mot de passe) et les identifiants bancaires (configuration et clé privée)
+dans un fichier `budget-config-AAAA-MM-JJ.budgetcfg`, enregistré où l'utilisateur le choisit (sélecteur de
+documents du système) ; *Importer une configuration* ouvre un tel fichier, demande la phrase secrète, résume
+son contenu puis remplace les réglages. Le format est celui de `budget-lib` (`config-archive`), commun aux
+trois applications : un fichier exporté depuis le bureau ou le web s'importe sur mobile, et inversement.
+
+- Le fichier n'est jamais écrit en clair : AES-256-CBC + HMAC-SHA256, clés dérivées de la phrase secrète
+  par PBKDF2-SHA256 (100 000 itérations). Une phrase secrète d'au moins 8 caractères est exigée ; elle ne
+  peut pas être récupérée. **Le fichier contient le mot de passe du calendrier et la clé privée bancaire** :
+  le conserver en lieu sûr et le supprimer une fois importé.
+- `core/config-cipher.ts` fournit la cryptographie du runtime NativeScript (pas de WebCrypto) : AES par le
+  CryptoJS embarqué dans `jsrsasign`, SHA-256/HMAC/PBKDF2 en JavaScript sur tableaux typés (le PBKDF2 de
+  CryptoJS est trop lent pour 100 000 itérations), aléa de la plateforme (`SecureRandom` sur Android,
+  `arc4random` sur iOS). Les tests vérifient l'interopérabilité avec WebCrypto dans les deux sens.
+- `core/config-archive.service.ts` rassemble et applique les sections ; les secrets vides du fichier
+  laissent ceux de l'appareil en place, et un fichier sans section bancaire ne touche pas à la banque.
+- Les fichiers passent par `@nativescript-community/ui-document-picker` (`saveFile` : *Créer un document*
+  sur Android, export vers Fichiers sur iOS ; `openFilePicker` : ouverture de n'importe quel fichier).
+
 ## Lancer
 
 ```sh
@@ -130,6 +154,9 @@ npm run test:coverage   # couverture (v8)
 ```
 
 Les tests (`src/tests/**/*.spec.ts`) s'exécutent avec vitest et jsdom, hors du runtime NativeScript :
-les modules `@nativescript/*` et les plugins natifs sont remplacés par des doublures en mémoire
+les modules `@nativescript/*` et les plugins natifs (SQLite, stockage sécurisé, sélecteur de documents…)
+sont remplacés par des doublures en mémoire
 (`src/tests/stubs/`, alias déclarés dans `vitest.config.mts`), dont l'état est remis à zéro avant
 chaque test par `src/tests/setup.ts`. Les services et composants Angular sont instanciés avec `TestBed`.
+`jsrsasign` n'est pas doublé : les tests de `config-cipher` utilisent la vraie bibliothèque et comparent
+ses résultats à WebCrypto (`globalThis.crypto` de Node).
