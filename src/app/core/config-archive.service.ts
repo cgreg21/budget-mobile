@@ -45,8 +45,9 @@ export class ConfigArchiveService {
 
   /** Lets the user pick a file and returns its text; null when nothing was picked. */
   async pickFile(): Promise<string | null> {
-    // No type is registered for `.budgetcfg`: any file (the `public.data` UTI on iOS, `*/*` on Android).
-    const { files } = await openFilePicker({ multipleSelection: false, extensions: ['public.data'] });
+    // `.budgetcfg` has no system type: `public.item` keeps every file selectable on iOS (a file with an unknown
+    // extension is greyed out otherwise); `*/*` on Android. The exported type declared in Info.plist names ours.
+    const { files } = await openFilePicker({ multipleSelection: false, extensions: ['public.item', 'org.arkdev.budgetmobile.config'] });
     if (files.length === 0) return null;
     return File.fromPath(files[0]).readText();
   }
