@@ -89,6 +89,11 @@ calendrier (par exemple `https://cloud.example.com/remote.php/dav/calendars/user
   Les nouvelles catégories reçoivent l'icône par défaut. Les modèles de récurrence et les
   réglages ne sont pas synchronisés : seules les occurrences, avec leur empreinte de récurrence,
   deviennent des événements simples. Une occurrence supprimée n'est pas recréée localement.
+- Les **catégories** (noms, icônes, ordre) sont synchronisées via un événement supplémentaire
+  (`categories@budget`, au 1er janvier 2000). Fusion : si les deux côtés ont changé, le calendrier
+  fait référence pour l'ordre et les icônes et les catégories seulement locales sont conservées ;
+  toute catégorie utilisée par une transaction y est ajoutée. La suppression d'une catégorie n'est pas
+  propagée (union des listes). Les anciens clients ignorent cet événement.
 - Transport natif `@nativescript/core Http.request` (PROPFIND, REPORT, PUT, DELETE), corps texte,
   en-têtes de réponse normalisés en minuscules ; pas de contrainte CORS sur mobile.
   Utiliser HTTPS, car l'authentification Basic n'est pas chiffrée sur HTTP.

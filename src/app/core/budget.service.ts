@@ -167,16 +167,16 @@ export class BudgetService {
   }
 
   addCategory(name: string, icon: string): void {
-    this.saveCategories([...this.categories(), { name, icon }]);
+    this.editCategories([...this.categories(), { name, icon }]);
   }
 
   updateCategory(name: string, patch: Partial<Category>): void {
-    this.saveCategories(this.categories().map((c) => (c.name === name ? { ...c, ...patch } : c)));
+    this.editCategories(this.categories().map((c) => (c.name === name ? { ...c, ...patch } : c)));
   }
 
   removeCategory(name: string): void {
     const next = this.categories().filter((c) => c.name !== name);
-    if (next.length > 0) this.saveCategories(next);
+    if (next.length > 0) this.editCategories(next);
   }
 
   private replaceMonth(month: MonthKey, list: Transaction[], notify = true): void {
@@ -255,6 +255,17 @@ export class BudgetService {
 
   private occurrenceStamp(id: string, month: MonthKey): string {
     return JSON.stringify([id, month]);
+  }
+
+  /** Stores the list received from the calendar; unlike a local edit it requests no further sync. */
+  applyCalendarCategories(list: Category[]): void {
+    this.saveCategories(list);
+  }
+
+  /** A local edit: the list travels with the transactions, so it requests a sync too. */
+  private editCategories(list: Category[]): void {
+    this.saveCategories(list);
+    this.transactionChanges.next();
   }
 
   private saveCategories(list: Category[]): void {

@@ -131,6 +131,18 @@ describe('BudgetService', () => {
       await flushDatabase();
       expect(fakeDatabase().rows('categories').map((r) => r.name)).toEqual(['C']);
     });
+
+    it('requests a sync after local edits only, not when the calendar list is applied', () => {
+      const changes = vi.fn();
+      b.transactionsChanged.subscribe(changes);
+      b.addCategory('C', 'z');
+      b.updateCategory('A', { icon: 'q' });
+      b.removeCategory('B');
+      expect(changes).toHaveBeenCalledTimes(3);
+      b.applyCalendarCategories([{ name: 'N', icon: 'n' }]);
+      expect(changes).toHaveBeenCalledTimes(3);
+      expect(b.categories()).toEqual([{ name: 'N', icon: 'n' }]);
+    });
   });
 
   describe('recurrences', () => {

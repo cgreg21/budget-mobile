@@ -1,5 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { DEFAULT_CALENDAR_CONFIG, DEFAULT_GENERAL_SETTINGS, icsToTransaction, transactionHash, transactionToIcs, type Transaction } from 'budget-lib';
+import {
+  CATEGORIES_BASELINE_KEY, DEFAULT_CALENDAR_CONFIG, DEFAULT_GENERAL_SETTINGS, categoriesToIcs, icsToCategories,
+  icsToTransaction, transactionHash, transactionToIcs, type Category, type Transaction,
+} from 'budget-lib';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BudgetService } from '~/app/core/budget.service';
@@ -147,7 +150,7 @@ describe('CalendarSyncService', () => {
       expect(calendar.status().lastSync).toBe(new Date().toISOString());
       expect(server.transactions().map((t) => t.id).sort()).toEqual(['a', 'b']);
       const baseline = JSON.parse(nsState.settings.get('calendar-baseline')!);
-      expect(Object.keys(baseline).sort()).toEqual(['a', 'b']);
+      expect(Object.keys(baseline).sort()).toEqual(['@categories', 'a', 'b']);
       expect(baseline.a).toEqual({ href: `${URL}a.ics`, etag: '"1"', hash: transactionHash(tx('a')) });
       expect(calendar.details()).toBe('En ligne \u00b7 Derni\u00e8re synchronisation : 15/03/2024 10:30');
 
@@ -226,12 +229,71 @@ describe('CalendarSyncService', () => {
       expect(nsState.settings.get('calendar-baseline')).not.toContain('"c"');
     });
 
+    describe('categories', () => {
+      const putCategories = (list: Category[]): void => {
+        server.events.set('/dav/budget/categories.ics', { etag: 1, ics: categoriesToIcs(list) });
+      };
+      const remoteList = (): Category[] | null => {
+        const event = [...server.events.values()].map((e) => icsToCategories(e.ics)).find((c) => c !== null);
+        return event ?? null;
+      };
+
+      it('stores the downloaded list without rewriting the transactions', async () => {
+        putCategories([{ name: 'Zed', icon: 'z' }, { name: 'Autres', icon: 'o' }]);
+        const { calendar, budget } = configured();
+        const changes = vi.fn();
+        budget.transactionsChanged.subscribe(changes);
+        await calendar.syncNow();
+        expect(budget.categories().slice(0, 2)).toEqual([{ name: 'Zed', icon: 'z' }, { name: 'Autres', icon: 'o' }]);
+        expect(budget.categories().length).toBeGreaterThan(2);
+        expect(fakeDatabase().rows('categories')[0].name).toBe('Zed');
+        expect(changes).not.toHaveBeenCalled();
+        expect(remoteList()?.map((c) => c.name)).toContain('Zed');
+      });
+
+      it('deduces categories from downloaded transactions', async () => {
+        server.put(tx('remote', { date: '2024-03-03', category: 'Fresh' }));
+        putCategories([{ name: 'Autres', icon: 'o' }]);
+        const { calendar, budget } = configured();
+        await calendar.syncNow();
+        expect(budget.categories().some((c) => c.name === 'Fresh')).toBe(true);
+        expect(remoteList()?.some((c) => c.name === 'Fresh')).toBe(true);
+      });
+
+      it('uploads the local list and tolerates its baseline entry', async () => {
+        const { calendar, budget } = configured();
+        calendar.start();
+        await calendar.syncNow();
+        const baseline = JSON.parse(nsState.settings.get('calendar-baseline')!);
+        expect(baseline[CATEGORIES_BASELINE_KEY]).toMatchObject({ href: expect.any(String), hash: expect.any(String) });
+        expect(remoteList()).toEqual(budget.categories());
+
+        budget.addCategory('Mine', 'm');
+        await vi.advanceTimersByTimeAsync(2000);
+        await vi.runAllTimersAsync();
+        expect(remoteList()?.at(-1)).toEqual({ name: 'Mine', icon: 'm' });
+
+        // A reloaded service accepts the persisted baseline.
+        const next = create();
+        await next.calendar.syncNow();
+        expect(next.calendar.status().state).toBe('online');
+      });
+
+      it('does not write the categories when the list is unchanged', async () => {
+        const { calendar, budget } = configured();
+        await calendar.syncNow();
+        const spy = vi.spyOn(budget, 'applyCalendarCategories');
+        await calendar.syncNow();
+        expect(spy).not.toHaveBeenCalled();
+      });
+    });
+
     it('counts the conflicts the server refuses', async () => {
       server.rejectPuts = true;
       const { calendar } = configured();
       await calendar.syncNow();
       expect(calendar.status().state).toBe('online');
-      expect(calendar.status().message).toMatch(/^2 conflit/);
+      expect(calendar.status().message).toMatch(/^3 conflit/);
     });
 
     it('reports a missing password', async () => {
@@ -345,3 +407,4 @@ describe('CalendarSyncService', () => {
     });
   });
 });
+
