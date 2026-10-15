@@ -9,6 +9,7 @@
     "noEmitHelpers": true,
     "noEmitOnError": true,
     "skipLibCheck": true,
+    "resolveJsonModule": true,
     "lib": ["ESNext", "dom"],
     "paths": {
       "~/*": ["./src/*"],
@@ -19,3 +20,4 @@
   "files": ["./src/main.ts", "./references.d.ts", "./src/polyfills.ts"],
   "exclude": ["node_modules", "platforms", "e2e"]
 }
+

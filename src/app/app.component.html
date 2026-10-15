@@ -1,5 +1,5 @@
 <RadSideDrawer [drawerTransition]="transition" [drawerContentSize]="drawerWidth">
-  <GridLayout tkDrawerContent rows="auto, *, auto" class="drawer">
+  <GridLayout tkDrawerContent rows="auto, *, auto, auto" class="drawer">
     <GridLayout row="0" columns="auto, *, auto" rows="auto" class="drawer-header">
       <Label col="0" [text]="logo" class="mdi drawer-logo" verticalAlignment="middle" horizontalAlignment="center"></Label>
       <Label col="1" [text]="s.t().appName" class="drawer-title" verticalAlignment="middle"></Label>
@@ -24,9 +24,8 @@
         <Label col="1" [text]="calendar.statusText()" textWrap="true" [class]="'drawer-calendar-text calendar-' + calendar.status().state"></Label>
       </GridLayout>
     }
+    <Label row="3" [text]="'v' + version" class="drawer-version" horizontalAlignment="left"></Label>
   </GridLayout>
-
-  <GridLayout tkMainContent>
     <page-router-outlet></page-router-outlet>
   </GridLayout>
 </RadSideDrawer>

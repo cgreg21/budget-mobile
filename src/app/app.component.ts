@@ -6,6 +6,7 @@ import { SlideInOnTopTransition } from 'nativescript-ui-sidedrawer';
 import { NativeScriptUISideDrawerModule } from 'nativescript-ui-sidedrawer/angular';
 
 import { BankService } from './core/bank/bank.service';
+import { APP_VERSION } from './app-info';
 import { CalendarSyncService } from './core/calendar-sync.service';
 import { DrawerService } from './core/drawer.service';
 import { SettingsService } from './core/settings.service';
@@ -26,6 +27,7 @@ export class AppComponent {
   readonly drawerWidth = DRAWER_WIDTH;
   readonly logo = UI_ICONS.logo;
   readonly settingsIcon = UI_ICONS.settings;
+  readonly version = APP_VERSION;
   readonly s = inject(SettingsService);
   readonly calendar = inject(CalendarSyncService);
   readonly calendarIcon = UI_ICONS.calendar;
