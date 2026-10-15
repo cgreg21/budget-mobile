@@ -1,5 +1,5 @@
 <GridLayout rows="auto, *" class="page">
-  <ns-header row="0" [title]="s.t().appName" [filterActive]="hasFilters()" (filtersTap)="openFilters()"></ns-header>
+  <ns-header row="0" [title]="s.t().appName" [filterActive]="hasFilters()" (filtersTap)="openFilters()" [syncing]="calendar.active() ? calendar.busy() : null" (syncTap)="calendar.syncNow()"></ns-header>
 
   <GridLayout row="1" rows="auto, auto, *, auto">
     <ns-month-bar row="0" [month]="b.selectedMonth()" (monthChange)="b.selectMonth($event)" (labelTap)="chooseMonth()"></ns-month-bar>

@@ -22,6 +22,9 @@ export class HeaderComponent {
   readonly title = input.required<string>();
   readonly filterActive = input<boolean | null>(null);
   readonly filtersTap = output<void>();
+  /** `null` hides the synchronise button; otherwise whether a synchronisation is running. */
+  readonly syncing = input<boolean | null>(null);
+  readonly syncTap = output<void>();
   readonly d = inject(DrawerService);
   readonly ui = UI_ICONS;
 

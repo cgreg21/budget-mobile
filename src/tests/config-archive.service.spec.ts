@@ -66,7 +66,7 @@ describe('ConfigArchiveService', () => {
     const data = service.collect();
     expect(data.general).toMatchObject({ language: 'en', currency: 'USD' });
     expect(data.thresholds).toEqual({ low: 5, medium: 6, high: 7 });
-    expect(data.calendar).toEqual({ enabled: true, calendarUrl: 'https://cal.example/u', username: 'me', proxyUrl: '', password: 'secret' });
+    expect(data.calendar).toEqual({ enabled: true, calendarUrl: 'https://cal.example/u', username: 'me', syncIntervalMinutes: 0, proxyUrl: '', password: 'secret' });
     expect(data.bank).toEqual({ config: { ...bank.config(), applicationId: 'app-1' }, privateKey: STORED_PEM });
   });
 
@@ -112,7 +112,7 @@ describe('ConfigArchiveService', () => {
     expect(settings.settings()).toEqual(imported().general);
     expect(budget.thresholds()).toEqual({ low: 1, medium: 2, high: 3 });
     expect(configure).toHaveBeenCalledWith({ enabled: true, calendarUrl: 'https://other.example/cal/', username: 'other' }, 'new-password');
-    expect(calendar.config()).toEqual({ enabled: true, calendarUrl: 'https://other.example/cal', username: 'other' });
+    expect(calendar.config()).toEqual({ enabled: true, calendarUrl: 'https://other.example/cal', username: 'other', syncIntervalMinutes: 0 });
     expect(readCalendarPassword()).toBe('new-password');
     expect(bank.config()).toEqual(imported().bank?.config);
     expect(readBankKey()).toBe(STORED_PEM);

@@ -1,7 +1,10 @@
-<GridLayout columns="auto, *, auto" rows="auto" class="app-bar">
+<GridLayout columns="auto, *, auto, auto" rows="auto" class="app-bar">
   <Label col="0" [text]="ui.menu" nsPress class="mdi bar-icon" (tap)="d.show()"></Label>
   <Label col="1" [text]="title()" class="bar-title"></Label>
+  @if (syncing() !== null) {
+    <Label col="2" [text]="ui.sync" nsPress [class]="syncing() ? 'mdi bar-icon bar-icon-active' : 'mdi bar-icon'" [isEnabled]="!syncing()" (tap)="syncTap.emit()"></Label>
+  }
   @if (filterActive() !== null) {
-    <Label col="2" [text]="ui.filters" nsPress [class]="filterActive() ? 'mdi bar-icon bar-icon-active' : 'mdi bar-icon'" (tap)="filtersTap.emit()"></Label>
+    <Label col="3" [text]="ui.filters" nsPress [class]="filterActive() ? 'mdi bar-icon bar-icon-active' : 'mdi bar-icon'" (tap)="filtersTap.emit()"></Label>
   }
 </GridLayout>

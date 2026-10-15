@@ -13,7 +13,7 @@ import { secureState } from './stubs/secure-storage';
 
 const URL = 'https://cal.example.org/dav/budget/';
 const CONFIG = { enabled: true, calendarUrl: URL, username: 'me' };
-const NORMALIZED = { ...CONFIG, calendarUrl: URL.slice(0, -1) };
+const NORMALIZED = { ...CONFIG, calendarUrl: URL.slice(0, -1), syncIntervalMinutes: 0 };
 
 type Request = { method: string; url: string; headers: Record<string, string>; content?: string };
 type Response = { statusCode: number; headers: Record<string, string>; content: { toString(): string } | null };

@@ -7,6 +7,7 @@ import {
 } from 'budget-lib';
 
 import { BudgetService } from '../../core/budget.service';
+import { CalendarSyncService } from '../../core/calendar-sync.service';
 import { SettingsService } from '../../core/settings.service';
 import { UI_ICONS } from '../../shared/icons';
 import { injectSheetOpener } from '../../shared/bottom-sheet';
@@ -35,6 +36,7 @@ const TABS = ['oneoff', 'recurring'] as const;
 export class BudgetPage {
   readonly b = inject(BudgetService);
   readonly s = inject(SettingsService);
+  readonly calendar = inject(CalendarSyncService);
   private readonly openSheet = injectSheetOpener();
   readonly ui = UI_ICONS;
   readonly pager = new TabPager(TABS);

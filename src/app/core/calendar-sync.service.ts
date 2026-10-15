@@ -59,6 +59,7 @@ export class CalendarSyncService {
   private started = false;
   private revision = 0;
   private timer: ReturnType<typeof setTimeout> | undefined;
+  private periodic: ReturnType<typeof setInterval> | undefined;
   private running: Promise<void> | undefined;
   private pendingSync = false;
   private pendingCheck = false;
@@ -75,7 +76,17 @@ export class CalendarSyncService {
     } catch (error) {
       console.warn('Calendar connectivity monitoring is unavailable:', error);
     }
+    this.restartPeriodic();
     this.schedule(0);
+  }
+
+  /** Automatic synchronisation every `syncIntervalMinutes`; off when the calendar is disabled or the interval is 0. */
+  private restartPeriodic(): void {
+    if (this.periodic !== undefined) clearInterval(this.periodic);
+    this.periodic = undefined;
+    const minutes = this.config().syncIntervalMinutes ?? 0;
+    if (!this.started || !this.active() || minutes <= 0) return;
+    this.periodic = setInterval(() => { void this.syncNow(); }, minutes * 60_000);
   }
 
   hasPassword(): boolean {
@@ -86,7 +97,8 @@ export class CalendarSyncService {
     const next = normalizeCalendarConfig(config);
     const previous = this.config();
     const changed = next.calendarUrl !== previous.calendarUrl || next.username !== previous.username;
-    if (!changed && config.enabled === previous.enabled && next.enabled === previous.enabled && password === null) {
+    if (!changed && config.enabled === previous.enabled && next.enabled === previous.enabled && password === null
+      && next.syncIntervalMinutes === previous.syncIntervalMinutes) {
       if (synchronize) this.schedule(0);
       return;
     }
@@ -104,6 +116,7 @@ export class CalendarSyncService {
     }
     writeJson(CONFIG_KEY, next);
     this.config.set(next);
+    this.restartPeriodic();
     const invalid = config.enabled && !isCalendarConfigComplete(next);
     this.state.set({
       state: invalid ? 'error' : next.enabled ? 'offline' : 'disabled',

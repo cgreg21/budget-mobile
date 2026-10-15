@@ -53,6 +53,7 @@ export interface Strings {
   calendar: {
     title: string; help: string; enable: string; url: string; username: string; password: string;
     passwordKept: string; passwordSession: string; save: string; test: string; syncNow: string;
+    syncInterval: string; syncIntervalHelp: string;
     states: Record<CalendarState, string>; never: string; lastSync(date: string): string;
     offlineNote: string; invalidConfig: string; missingPassword: string; connectionOk: string;
     authFailed: string; failed(message: string): string; skipped(count: number): string;
@@ -162,6 +163,7 @@ const en: Strings = {
     passwordKept: 'Leave empty to keep the saved password',
     passwordSession: 'Secure storage is unavailable in this build. The password stays in memory for this session; enter it again after restarting.',
     save: 'Save', test: 'Test connection', syncNow: 'Synchronize now',
+    syncInterval: 'Automatic synchronization (minutes)', syncIntervalHelp: 'Synchronize every N minutes while the app is open. 0 turns it off.',
     states: { disabled: 'Synchronization off', syncing: 'Synchronizing...', online: 'Online', offline: 'Offline', error: 'Error' },
     never: 'never', lastSync: (date) => 'Last synchronization: ' + date,
     offlineNote: 'Keep editing locally. Synchronization resumes when the connection returns.',
@@ -300,6 +302,7 @@ const fr: Strings = {
     passwordKept: 'Laisser vide pour conserver le mot de passe enregistr\u00e9',
     passwordSession: 'Le stockage s\u00e9curis\u00e9 est indisponible dans cette version. Le mot de passe reste en m\u00e9moire pour cette session ; saisissez-le de nouveau apr\u00e8s un red\u00e9marrage.',
     save: 'Enregistrer', test: 'Tester la connexion', syncNow: 'Synchroniser maintenant',
+    syncInterval: 'Synchronisation automatique (minutes)', syncIntervalHelp: 'Synchronise toutes les N minutes tant que l\u2019application est ouverte. 0 la d\u00e9sactive.',
     states: { disabled: 'Synchronisation d\u00e9sactiv\u00e9e', syncing: 'Synchronisation...', online: 'En ligne', offline: 'Hors ligne', error: 'Erreur' },
     never: 'jamais', lastSync: (date) => 'Derni\u00e8re synchronisation : ' + date,
     offlineNote: 'Continuez \u00e0 modifier localement. La synchronisation reprend au retour de la connexion.',

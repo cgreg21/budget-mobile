@@ -1,4 +1,4 @@
-﻿import { TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { ModalDialogService, RouterExtensions } from '@nativescript/angular';
 import { ConfigFileError, DEFAULT_CATEGORY_ICON, emptyConfigData } from 'budget-lib';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -322,8 +322,8 @@ describe('RecurrencesPage', () => {
   it('describes a series and deletes it after confirmation', async () => {
     const page = createComponent(RecurrencesPage).componentInstance;
     const [open, bounded] = budget.recurrences().sort((a, b) => a.id.localeCompare(b.id));
-    expect(page.details(open)).toBe('Monthly · day 5 · Logement · from January 2024');
-    expect(page.details(bounded)).toBe('Monthly · day 5 · Logement · February 2024 - April 2024 (3 times)');
+    expect(page.details(open)).    toBe('Monthly \u00B7 day 5 \u00B7 Logement \u00B7 from January 2024');
+        expect(page.details(bounded)).toBe('Monthly \u00B7 day 5 \u00B7 Logement \u00B7 February 2024 - April 2024 (3 times)');
 
     Dialogs.confirm.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
     await page.remove(bounded);
@@ -354,7 +354,7 @@ describe('SettingsPage', () => {
     page.calendarUsername.set('me');
     page.calendarPassword.set('pw');
     page.saveCalendar();
-    expect(configure).toHaveBeenCalledWith({ enabled: true, calendarUrl: 'https://cal.example/u/', username: 'me' }, 'pw', true);
+    expect(configure).toHaveBeenCalledWith({ enabled: true, calendarUrl: 'https://cal.example/u/', username: 'me', syncIntervalMinutes: 0 }, 'pw', true);
     expect(page.calendarPassword()).toBe('');
     expect(page.calendarUrl()).toBe('https://cal.example/u');
 

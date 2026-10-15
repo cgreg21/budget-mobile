@@ -44,6 +44,9 @@
       <TextField [text]="calendarUrl()" hint="https://cloud.example.com/remote.php/dav/calendars/user/budget" keyboardType="url" autocorrect="false" autocapitalizationType="none" class="input" (textChange)="calendarUrl.set($any($event).value)"></TextField>
       <Label [text]="s.t().calendar.username" class="field-label"></Label>
       <TextField [text]="calendarUsername()" autocorrect="false" autocapitalizationType="none" class="input" (textChange)="calendarUsername.set($any($event).value)"></TextField>
+      <Label [text]="s.t().calendar.syncInterval" class="field-label"></Label>
+      <TextField [text]="calendarInterval()" keyboardType="number" class="input" (textChange)="calendarInterval.set($any($event).value)"></TextField>
+      <Label [text]="s.t().calendar.syncIntervalHelp" textWrap="true" class="row-sub"></Label>
       <Label [text]="s.t().calendar.password" class="field-label"></Label>
       <TextField [text]="calendarPassword()" [hint]="calendar.hasPassword() ? s.t().calendar.passwordKept : ''" secure="true" autocorrect="false" autocapitalizationType="none" class="input" (textChange)="calendarPassword.set($any($event).value)"></TextField>
       <Label [text]="calendar.details()" textWrap="true" [class]="'calendar-status calendar-' + calendar.status().state"></Label>

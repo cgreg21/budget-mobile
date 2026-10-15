@@ -25,7 +25,7 @@ const MDI_CODE_POINTS = {
   'cog-outline': 0xF08BB, 'chart-pie': 0xF012B, 'tune-variant': 0xF1542, 'chevron-left': 0xF0141,
   'chevron-right': 0xF0142, 'chevron-double-left': 0xF013D, 'chevron-double-right': 0xF013E,
   history: 0xF02DA, repeat: 0xF0456, 'delete-outline': 0xF09E7, menu: 0xF035C, 'format-list-bulleted': 0xF0279,
-  'checkbox-marked': 0xF0132, 'checkbox-blank-outline': 0xF0131, plus: 0xF0415,
+  'checkbox-marked': 0xF0132, 'checkbox-blank-outline': 0xF0131, plus: 0xF0415, sync: 0xF04E6,
 } as const;
 
 export type IconName = keyof typeof MDI_CODE_POINTS;
@@ -55,6 +55,7 @@ export const UI_ICONS = {
   checked: glyph('checkbox-marked'),
   unchecked: glyph('checkbox-blank-outline'),
   add: glyph('plus'),
+  sync: glyph('sync'),
 } as const;
 
 /** The glyph of every category icon name known to `budget-lib`. */

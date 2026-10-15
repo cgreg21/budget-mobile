@@ -40,6 +40,7 @@ export class SettingsPage {
   readonly calendarEnabled = signal(this.calendar.config().enabled);
   readonly calendarUrl = signal(this.calendar.config().calendarUrl);
   readonly calendarUsername = signal(this.calendar.config().username);
+  readonly calendarInterval = signal(String(this.calendar.config().syncIntervalMinutes ?? 0));
   readonly calendarPassword = signal('');
   readonly passwordPersistent = isCalendarPasswordPersistent();
   readonly configBusy = signal(false);
@@ -146,18 +147,21 @@ export class SettingsPage {
     this.calendarEnabled.set(config.enabled);
     this.calendarUrl.set(config.calendarUrl);
     this.calendarUsername.set(config.username);
+    this.calendarInterval.set(String(config.syncIntervalMinutes ?? 0));
     this.calendarPassword.set('');
   }
 
   saveCalendar(synchronize = true): void {
     this.calendar.configure({
       enabled: this.calendarEnabled(), calendarUrl: this.calendarUrl(), username: this.calendarUsername(),
+      syncIntervalMinutes: Number(this.calendarInterval()),
     }, this.calendarPassword() || null, synchronize);
     this.calendarPassword.set('');
     const config = this.calendar.config();
     this.calendarEnabled.set(config.enabled);
     this.calendarUrl.set(config.calendarUrl);
     this.calendarUsername.set(config.username);
+    this.calendarInterval.set(String(config.syncIntervalMinutes ?? 0));
   }
 
   testCalendar(): void {

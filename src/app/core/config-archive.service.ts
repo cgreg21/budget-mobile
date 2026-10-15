@@ -64,8 +64,8 @@ export class ConfigArchiveService {
   apply(data: ConfigData): void {
     this.settings.update(data.general);
     this.budget.setThresholds({ ...data.thresholds });
-    const { enabled, calendarUrl, username, password } = data.calendar;
-    this.calendar.configure({ enabled, calendarUrl, username }, password === '' ? null : password);
+    const { enabled, calendarUrl, username, syncIntervalMinutes, password } = data.calendar;
+    this.calendar.configure({ enabled, calendarUrl, username, syncIntervalMinutes }, password === '' ? null : password);
     if (data.bank !== null) this.bank.importConfig(data.bank.config, data.bank.privateKey);
   }
 }
