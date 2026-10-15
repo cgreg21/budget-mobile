@@ -35,7 +35,7 @@ export class StatsPage {
     const month = this.month();
     return month === this.b.selectedMonth() ? this.b.transactions() : this.b.transactionsOf(month);
   });
-  readonly expenseSlices = computed(() => this.slices(this.transactions()));
+  readonly expenseSlices = computed(() => this.slices(this.transactions().filter((t) => t.recurrenceId === undefined)));
   readonly recurringSlices = computed(() => this.slices(this.transactions().filter((t) => t.recurrenceId !== undefined)));
 
   constructor() {

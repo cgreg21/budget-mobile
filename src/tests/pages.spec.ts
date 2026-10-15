@@ -258,8 +258,8 @@ describe('StatsPage', () => {
     expect(currentPage().cssClasses.has('tabs-page')).toBe(true);
     expect(page.month()).toBe('2024-03');
     // The seeded occurrence of r1 plus the one generated for r2 make two Logement entries.
-    expect(page.expenseSlices().map((s) => [s.label, s.amount])).toEqual([['Logement', 1000], ['Alimentation', 40]]);
-    expect(page.recurringSlices().map((s) => s.label)).toEqual(['Logement']);
+    expect(page.expenseSlices().map((s) => [s.label, s.amount])).toEqual([['Alimentation', 40]]);
+    expect(page.recurringSlices().map((s) => [s.label, s.amount])).toEqual([['Logement', 1000]]);
     expect(page.expenseSlices()[0].icon).toBeTruthy();
 
     const modal = TestBed.inject(ModalDialogService);
