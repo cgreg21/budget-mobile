@@ -277,6 +277,7 @@ export class BudgetService {
     const sorted = sortRecurrences(list);
     persistRecurrences(sorted);
     this.recurrences.set(sorted);
+    this.transactionChanges.next();
     this.applyRecurrences();
   }
 

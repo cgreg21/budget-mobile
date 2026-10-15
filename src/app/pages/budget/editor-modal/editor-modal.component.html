@@ -15,6 +15,9 @@
                    (blur)="amount.set(s.normalizeInput(amount()))"
                    (textChange)="amount.set($any($event).value)"></TextField>
 
+        <Label [text]="s.t().editor.date" class="field-label"></Label>
+        <DatePicker [date]="pickerDate()" (dateChange)="onDateChange($any($event).value)"></DatePicker>
+
         <Label [text]="s.t().editor.description" class="field-label"></Label>
         <TextField [text]="description()" class="input" (focus)="revealField($any($event).object)"
                    (textChange)="description.set($any($event).value)"></TextField>

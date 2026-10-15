@@ -1,4 +1,4 @@
-import { Component, NO_ERRORS_SCHEMA, inject, signal } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA, computed, inject, signal } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
 import { Dialogs, type ScrollView, type View } from '@nativescript/core';
 import {
@@ -31,7 +31,11 @@ export class EditorModalComponent extends BottomSheet<EditorContext> {
   /** The transaction being edited; `undefined` for a new one. */
   readonly existing = this.b.transactions().find((t) => t.id === this.context.id);
   private readonly series = this.existing && this.b.recurrenceOf(this.existing);
-  private readonly date = this.existing?.date ?? this.b.defaultTransactionDate;
+  readonly date = signal(this.existing?.date ?? this.b.defaultTransactionDate);
+  readonly pickerDate = computed(() => {
+    const [year, month, day] = this.date().split('-').map(Number);
+    return new Date(year, month - 1, day);
+  });
 
   readonly kind = signal<TransactionKind>(this.existing?.kind ?? 'expense');
   readonly amount = signal(this.existing ? this.s.formatInput(this.existing.amount) : '');
@@ -60,6 +64,11 @@ export class EditorModalComponent extends BottomSheet<EditorContext> {
 
   bindScroll(scroll: ScrollView): void {
     this.scroll = scroll;
+  }
+
+  onDateChange(value: Date): void {
+    const pad = (n: number): string => String(n).padStart(2, '0');
+    this.date.set(`${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`);
   }
 
   async pickCategory(): Promise<void> {
@@ -95,7 +104,7 @@ export class EditorModalComponent extends BottomSheet<EditorContext> {
 
     const existing = this.existing;
     const input: TransactionInput = {
-      date: this.date,
+      date: this.date(),
       description: this.description().trim(),
       category: this.category(),
       kind: this.kind(),

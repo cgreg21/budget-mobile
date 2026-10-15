@@ -194,10 +194,11 @@ export class CalendarSyncService {
         }
         await flushDatabase();
         const local = this.budget.allTransactions();
-        const result = await syncCalendar(client, local, this.baseline, this.budget.categories());
+        const result = await syncCalendar(client, local, this.baseline, this.budget.categories(), this.budget.recurrences());
         if (revision !== this.revision) continue;
         this.budget.applyCalendarChanges(result.upsertLocal, result.removeLocal, local);
-                if (result.categories !== null) this.budget.applyCalendarCategories(result.categories);        await flushDatabase();
+        if (result.categories !== null) this.budget.applyCalendarCategories(result.categories);
+        await flushDatabase();
         if (revision !== this.revision) continue;
         writeJson(BASELINE_KEY, result.baseline);
         this.baseline = result.baseline;
