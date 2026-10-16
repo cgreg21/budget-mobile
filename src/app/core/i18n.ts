@@ -13,7 +13,7 @@ export interface Strings {
     expense: string; income: string; all: string; back: string;
     noDescription: string; ok: string;
   };
-  frequency: { monthly: string; bimonthly: string; quarterly: string; semiannual: string; yearly: string };
+  frequency: { daily: string; weekly: string; monthly: string; bimonthly: string; quarterly: string; semiannual: string; yearly: string };
   months: string[];
   budget: {
     balance: string; income: string; expenses: string;
@@ -90,7 +90,7 @@ const en: Strings = {
     expense: 'Expense', income: 'Income', all: 'All', back: 'Back',
     noDescription: '(no description)', ok: 'OK',
   },
-  frequency: { monthly: 'Monthly', bimonthly: 'Every 2 months', quarterly: 'Quarterly', semiannual: 'Every 6 months', yearly: 'Yearly' },
+  frequency: { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', bimonthly: 'Every 2 months', quarterly: 'Quarterly', semiannual: 'Every 6 months', yearly: 'Yearly' },
   months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
     'September', 'October', 'November', 'December'],
   budget: {
@@ -229,7 +229,7 @@ const fr: Strings = {
     expense: 'Dépense', income: 'Revenu', all: 'Tout', back: 'Retour',
     noDescription: '(sans description)', ok: 'OK',
   },
-  frequency: { monthly: 'Mensuelle', bimonthly: 'Bimestrielle', quarterly: 'Trimestrielle', semiannual: 'Semestrielle', yearly: 'Annuelle' },
+  frequency: { daily: 'Quotidienne', weekly: 'Hebdomadaire', monthly: 'Mensuelle', bimonthly: 'Bimestrielle', quarterly: 'Trimestrielle', semiannual: 'Semestrielle', yearly: 'Annuelle' },
   months: ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août',
     'Septembre', 'Octobre', 'Novembre', 'Décembre'],
   budget: {
